@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fancam Maker</title>
+<style>
+:root{
+  --bg:#0e0f13; --card:#171920; --card2:#1f222b; --line:#2b2f3a; --text:#e9eaf0; --mute:#9aa0b0;
+  --accent:#ff4f8b; --accent2:#ff7aa8; --ok:#35d07f; --warn:#f5b43c; --bad:#ff5a5a; --tick:#ffffff;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI","Noto Sans Thai","Sukhumvit Set",sans-serif;-webkit-text-size-adjust:100%}
+header{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(14,15,19,.92);backdrop-filter:blur(8px);z-index:20}
+header h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.2px}
+header h1 span{color:var(--accent)}
+header .sub{color:var(--mute);font-size:13px}
+header .badge{margin-left:auto;font-size:12px;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.wrap{max-width:1280px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
+h2{font-size:15px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+h2 .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;flex:none}
+.hint{color:var(--mute);font-size:13px;margin:0 0 10px}
+#drop{border:2px dashed var(--line);border-radius:16px;padding:42px 16px;text-align:center;cursor:pointer;transition:.15s;background:var(--card)}
+#drop.over,#drop:hover{border-color:var(--accent);background:#1b1d25}
+#drop .big{font-size:18px;font-weight:600;margin-bottom:6px}
+#drop .mute{color:var(--mute);font-size:13px}
+.cols{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.cols{grid-template-columns:minmax(0,1fr)}}
+.stack{display:grid;gap:16px;min-width:0}
+.vwrap{position:relative;width:100%;background:#000;border-radius:10px;overflow:hidden;touch-action:manipulation}
+.vwrap video{display:block;width:100%;height:100%}
+.vwrap canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
+.ctrl{display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+.time{font-variant-numeric:tabular-nums;color:var(--mute);font-size:13px;margin-left:auto}
+button,.btn{appearance:none;border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:10px;padding:8px 12px;font:inherit;font-size:14px;cursor:pointer;min-height:38px;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+button:hover:not(:disabled),.btn:hover{border-color:#454b5a}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.primary,.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.primary:hover:not(:disabled){background:var(--accent2)}
+button.icon{width:40px;justify-content:center;padding:0}
+#tl{display:block;width:100%;height:40px;margin-top:10px;border-radius:8px;cursor:pointer;touch-action:none;background:#0b0c10}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mute);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chip{display:inline-flex;align-items:center;gap:4px;background:#232633;border:1px solid var(--line);border-radius:999px;padding:2px 4px 2px 10px;font-size:12px;font-variant-numeric:tabular-nums}
+.chip button{min-height:0;padding:2px 7px;border:0;background:transparent;color:var(--mute);border-radius:999px;font-size:12px}
+.chip button:hover{color:var(--text);background:#30344a}
+.chip.manual{border-style:dashed}
+.prog{height:8px;background:#0b0c10;border-radius:99px;overflow:hidden;margin-top:8px}
+.prog>div{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#ffa65c);transition:width .2s}
+.status{font-size:13px;color:var(--mute);margin-top:6px;min-height:20px}
+.ana{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ana .grow{flex:1;min-width:160px}
+#pvBox{display:flex;justify-content:center;background:#000;border-radius:10px;padding:8px}
+#pv{display:block;max-width:100%;max-height:62vh;border-radius:6px;background:#000}
+.set{display:grid;gap:12px;margin-top:12px}
+.set label{display:grid;gap:4px;font-size:13px}
+.set .lab{display:flex;justify-content:space-between;color:var(--mute)}
+.set .lab b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent);height:24px}
+.seg{display:flex;background:#0b0c10;border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;min-height:32px;padding:4px 6px;font-size:13px;justify-content:center}
+.seg button.on{background:var(--card2);color:var(--accent2);font-weight:600}
+#result video{width:100%;max-height:60vh;border-radius:10px;background:#000;margin-top:10px}
+.warnbox{background:#2a2213;border:1px solid #574414;color:#f5d48a;border-radius:10px;padding:8px 10px;font-size:13px;margin-top:10px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#262a36;border:1px solid var(--line);color:var(--text);padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:50;max-width:calc(100% - 32px);text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%)}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;place-items:center;z-index:60;padding:16px}
+#modal.show{display:grid}
+#modal .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;max-width:420px;width:100%}
+#modal .box p{margin:0 0 14px;white-space:pre-line}
+#modal .box .row{justify-content:flex-end}
+[hidden]{display:none!important}
+.small{font-size:12px;color:var(--mute)}
+kbd{background:#232633;border:1px solid var(--line);border-radius:4px;padding:0 4px;font-size:11px}
+</style>
+</head>
+<body>
+<header>
+  <h1><span>Fancam</span> Maker</h1>
+  <span class="sub">ทำแฟนแคมแนวตั้งจากวิดีโอคอนเสิร์ต</span>
+  <span class="badge" id="epBadge">กำลังโหลดโมเดล…</span>
+</header>
+
+<div class="wrap">
+  <section id="pick">
+    <div id="drop" tabindex="0" role="button">
+      <div class="big">เลือกวิดีโอ</div>
+      <div class="mute">แตะเพื่อเลือกไฟล์ หรือลากไฟล์วิดีโอแนวนอนมาวางตรงนี้ (MP4 / MOV / WebM)</div>
+    </div>
+    <input type="file" id="file" accept="video/*" hidden>
+  </section>
+
+  <main id="work" hidden>
+    <div class="cols">
+      <div class="stack">
+        <section class="card">
+          <h2><span class="n">1</span>วิเคราะห์วิดีโอ</h2>
+          <div class="ana">
+            <button class="primary" id="btnAna">วิเคราะห์วิดีโอ</button>
+            <button id="btnAnaCancel" hidden>ยกเลิก</button>
+            <div class="grow">
+              <div class="prog"><div id="anaBar"></div></div>
+              <div class="status" id="anaStatus">ตรวจหาคนทุก 0.1 วินาที (ทำงานในเครื่อง ไม่อัปโหลดไฟล์)</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2><span class="n">2</span>เลือกคนที่จะตาม</h2>
+          <p class="hint">หยุดวิดีโอแล้ว<b>แตะที่ตัวคน</b>ที่ต้องการตาม ถ้ากล้องตามผิดคน ให้ไปที่ช่วงนั้นแล้วแตะคนที่ถูกอีกครั้ง (เพิ่มจุดยึด) ถ้าไม่มีกรอบรอบตัวคน แตะกลางตัวเขาได้เลย</p>
+          <div class="vwrap" id="vwrap">
+            <video id="vid" playsinline preload="auto"></video>
+            <canvas id="ov"></canvas>
+          </div>
+          <div class="ctrl">
+            <button class="icon" id="btnBack" title="ย้อน 0.1 วินาที">◀︎</button>
+            <button class="icon primary" id="btnPlay" title="เล่น / หยุด">▶︎</button>
+            <button class="icon" id="btnFwd" title="เดินหน้า 0.1 วินาที">▶︎▶︎</button>
+            <span class="time" id="timeLbl">0:00.0 / 0:00.0</span>
+          </div>
+          <canvas id="tl"></canvas>
+          <div class="legend">
+            <span><i style="background:var(--ok)"></i>เจอคนที่ตาม</span>
+            <span><i style="background:var(--warn)"></i>หลุด (เดาตำแหน่ง)</span>
+            <span><i style="background:#fff"></i>จุดยึด</span>
+            <span><i style="background:#3a3f4d"></i>ยังไม่วิเคราะห์</span>
+          </div>
+          <div class="row">
+            <button id="btnNextLost">ไปช่วงที่หลุดถัดไป</button>
+            <button id="btnDelAnchor">ลบจุดยึด</button>
+            <button id="btnClearAnchors">ล้างจุดยึดทั้งหมด</button>
+          </div>
+          <div class="chips" id="anchorList"></div>
+          <p class="small" style="margin:10px 0 0">คีย์ลัด: <kbd>Space</kbd> เล่น/หยุด · <kbd>←</kbd><kbd>→</kbd> ทีละ 0.1 วิ · <kbd>N</kbd> ช่วงที่หลุดถัดไป · <kbd>Del</kbd> ลบจุดยึด</p>
+        </section>
+      </div>
+
+      <div class="stack">
+        <section class="card">
+          <h2><span class="n">3</span>ปรับกล้อง</h2>
+          <div id="pvBox"><canvas id="pv" width="540" height="960"></canvas></div>
+          <div class="set">
+            <label><span class="lab">ขนาดคนในเฟรม <b id="vSubject"></b></span><input type="range" id="sSubject" min="40" max="95" step="1"></label>
+            <label><span class="lab">ความนุ่มของกล้อง <b id="vSmooth"></b></span><input type="range" id="sSmooth" min="0.1" max="2" step="0.05"></label>
+            <label><span class="lab">กล้องสั่นแบบถือมือ <b id="vShake"></b></span><input type="range" id="sShake" min="0" max="10" step="1"></label>
+            <label><span class="lab">ซูมสูงสุด (ครอปเล็กสุด % ของความสูงต้นฉบับ) <b id="vMinCrop"></b></span><input type="range" id="sMinCrop" min="15" max="100" step="1"></label>
+            <div><div class="lab small" style="margin-bottom:4px">สัดส่วน</div>
+              <div class="seg" id="segAspect"><button data-v="9:16">9:16</button><button data-v="4:5">4:5</button><button data-v="1:1">1:1</button></div></div>
+            <div><div class="lab small" style="margin-bottom:4px">ความละเอียด</div>
+              <div class="seg" id="segRes"><button data-v="1080">1080p</button><button data-v="720">720p</button></div></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2><span class="n">4</span>ส่งออกวิดีโอ</h2>
+          <p class="hint" id="expInfo"></p>
+          <div class="row" style="margin-top:0">
+            <button class="primary" id="btnExport">ส่งออกวิดีโอ</button>
+            <button id="btnExpCancel" hidden>ยกเลิก</button>
+          </div>
+          <div class="prog"><div id="expBar"></div></div>
+          <div class="status" id="expStatus"></div>
+          <div class="warnbox" id="expWarn" hidden>กำลังอัดแบบเวลาจริง: <b>เปิดแท็บนี้ค้างไว้</b> อย่าสลับแอป/แท็บ หรือปิดหน้าจอ ไม่งั้นวิดีโอจะกระตุก</div>
+          <div id="result" hidden>
+            <video id="outVid" controls playsinline></video>
+            <div class="row"><a class="btn primary" id="dlLink" download="fancam.mp4">ดาวน์โหลด</a><span class="small" id="outInfo" style="align-self:center"></span></div>
+          </div>
+        </section>
+        <button id="btnNewFile">เลือกวิดีโออื่น</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast"></div>
+<div id="modal"><div class="box"><p id="modalText"></p><div class="row"><button id="modalCancel">ยกเลิก</button><button class="primary" id="modalOk">ตกลง</button></div></div></div>
+
+<script src="ort/ort.min.js"></script>
+<script>
+'use strict';
+/* ============================================================
+   Fancam Maker — everything runs in the browser.
+   ============================================================ */
+const SFPS = 10;                 // analysis samples per second
+const IN = 416;                  // model input size
+const HW = 640, HH = 360;        // histogram frame size
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmt = t => { t = Math.max(0, t || 0); const m = Math.floor(t / 60), s = t - m * 60; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1); };
+const params = new URLSearchParams(location.search);
+
+const S = {
+  file: null, url: null, key: '', W: 0, H: 0, dur: 0, N: 0,
+  dets: [], analyzed: 0, analyzing: false, cancelAna: false,
+  anchors: [],                       // {idx, box:{x,y,w,h}, hist, manual}
+  track: [], tsrc: [],               // tsrc: 0 none, 1 detected, 2 anchor, 3 interpolated
+  path: null,                        // {cx, cy, h} Float64Arrays
+  session: null, ep: '',
+  exporting: false,
+};
+const DEF = { subject: 80, smooth: 0.6, shake: 2, minCrop: 25, aspect: '9:16', res: 1080 };
+let SET = { ...DEF };
+try { Object.assign(SET, JSON.parse(localStorage.getItem('fancam.settings') || '{}')); } catch (e) {}
+const saveSet = () => { try { localStorage.setItem('fancam.settings', JSON.stringify(SET)); } catch (e) {} };
+// random phases for the handheld shake (fixed per session)
+const PH = Array.from({ length: 9 }, () => Math.random() * Math.PI * 2);
+
+/* ---------------- UI helpers ---------------- */
+let toastT;
+function toast(msg, ms = 2600) { const el = $('toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), ms); }
+function ask(text, okLabel = 'ตกลง', cancel = true) {
+  return new Promise(res => {
+    $('modalText').textContent = text; $('modalOk').textContent = okLabel; $('modalCancel').hidden = !cancel;
+    $('modal').classList.add('show');
+    const done = v => { $('modal').classList.remove('show'); $('modalOk').onclick = $('modalCancel').onclick = null; res(v); };
+    $('modalOk').onclick = () => done(true); $('modalCancel').onclick = () => done(false);
+  });
+}
+
+/* ---------------- Model ---------------- */
+async function loadModel() {
+  const badge = $('epBadge');
+  try {
+    ort.env.wasm.wasmPaths = new URL('ort/', location.href).href;
+    ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 2) : 1;
+    const resp = await fetch('models/yolov8n.onnx');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const total = +resp.headers.get('content-length') || 12754006;
+    const reader = resp.body.getReader(); const parts = []; let got = 0;
+    for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); got += value.length; badge.textContent = 'โหลดโมเดล ' + Math.round(got / total * 100) + '%'; }
+    const buf = new Uint8Array(got); let o = 0; for (const p of parts) { buf.set(p, o); o += p.length; }
+    // WebGL EP cannot run YOLOv8 (no Split op for opset 17), so WASM (SIMD + threads) is the default
+    const eps = params.get('ep') ? [params.get('ep')] : ['wasm'];
+    for (const ep of eps) {
+      try {
+        badge.textContent = 'เตรียมโมเดล (' + ep + ')…';
+        const s = await ort.InferenceSession.create(buf, { executionProviders: [ep], graphOptimizationLevel: 'all' });
+        const t = new ort.Tensor('float32', new Float32Array(3 * IN * IN).fill(0.45), [1, 3, IN, IN]);
+        const out = (await s.run({ images: t })).output0;
+        if (!out || out.dims[1] !== 84 || !Number.isFinite(out.data[0])) throw new Error('bad output ' + (out && out.dims));
+        S.session = s; S.ep = ep; break;
+      } catch (e) { console.warn('EP failed', ep, e); }
+    }
+    if (!S.session) throw new Error('ไม่มี execution provider ที่ใช้ได้');
+    badge.textContent = 'โมเดลพร้อม · ' + S.ep + (S.ep === 'wasm' ? ' ×' + ort.env.wasm.numThreads : '');
+  } catch (e) {
+    console.error(e); badge.textContent = 'โหลดโมเดลไม่สำเร็จ'; badge.style.color = 'var(--bad)';
+    toast('โหลดโมเดลไม่สำเร็จ: ' + e.message, 6000);
+  }
+  updateButtons();
+}
+const modelReady = loadModel();
+
+/* ---------------- Detection ---------------- */
+const inCan = document.createElement('canvas'); inCan.width = inCan.height = IN;
+const inCtx = inCan.getContext('2d', { willReadFrequently: true });
+const hCan = document.createElement('canvas'); hCan.width = HW; hCan.height = HH;
+const hCtx = hCan.getContext('2d', { willReadFrequently: true });
+
+function preprocess(video) {
+  const W = S.W, H = S.H, sc = IN / Math.max(W, H);
+  const nw = Math.round(W * sc), nh = Math.round(H * sc), px = Math.floor((IN - nw) / 2), py = Math.floor((IN - nh) / 2);
+  inCtx.fillStyle = 'rgb(114,114,114)'; inCtx.fillRect(0, 0, IN, IN);
+  inCtx.drawImage(video, px, py, nw, nh);
+  const d = inCtx.getImageData(0, 0, IN, IN).data, A = IN * IN, f = new Float32Array(3 * A);
+  for (let i = 0, j = 0; i < A; i++, j += 4) { f[i] = d[j] / 255; f[A + i] = d[j + 1] / 255; f[2 * A + i] = d[j + 2] / 255; }
+  return { tensor: new ort.Tensor('float32', f, [1, 3, IN, IN]), sc: nw / W, px, py };
+}
+function iou(a, b) {
+  const x1 = Math.max(a.x, b.x), y1 = Math.max(a.y, b.y), x2 = Math.min(a.x + a.w, b.x + b.w), y2 = Math.min(a.y + a.h, b.y + b.h);
+  const i = Math.max(0, x2 - x1) * Math.max(0, y2 - y1); return i / (a.w * a.h + b.w * b.h - i + 1e-9);
+}
+function decode(out, sc, px, py) {
+  const d = out.data, n = out.dims[2], W = S.W, H = S.H; let c = [];
+  for (let j = 0; j < n; j++) {
+    const s = d[4 * n + j]; if (s <= 0.25) continue;
+    const cx = d[j], cy = d[n + j], w = d[2 * n + j], h = d[3 * n + j];
+    let x1 = (cx - w / 2 - px) / sc, y1 = (cy - h / 2 - py) / sc, x2 = (cx + w / 2 - px) / sc, y2 = (cy + h / 2 - py) / sc;
+    x1 = clamp(x1, 0, W); x2 = clamp(x2, 0, W); y1 = clamp(y1, 0, H); y2 = clamp(y2, 0, H);
+    if (y2 - y1 < 30 || x2 - x1 < 6) continue;
+    c.push({ x: x1, y: y1, w: x2 - x1, h: y2 - y1, s });
+  }
+  c.sort((a, b) => b.s - a.s);
+  const keep = [];
+  for (const b of c) { if (keep.length >= 30) break; if (keep.every(k => iou(k, b) <= 0.45)) keep.push(b); }
+  return keep;
+}
+
+/* ---------------- Appearance histogram ---------------- */
+function regionHist(img, box, k, out, off, rx0, rx1, ry0, ry1) {
+  const x0 = Math.max(0, Math.floor((box.x + box.w * rx0) * k)), x1 = Math.min(HW, Math.ceil((box.x + box.w * rx1) * k));
+  const y0 = Math.max(0, Math.floor((box.y + box.h * ry0) * k)), y1 = Math.min(HH, Math.ceil((box.y + box.h * ry1) * k));
+  let cnt = 0;
+  for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+    const p = (y * HW + x) * 4, r = img[p], g = img[p + 1], b = img[p + 2];
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), v = mx / 255, s = mx ? (mx - mn) / mx : 0;
+    let bin;
+    if (s < 0.2 || v < 0.15) bin = 24 + Math.min(3, Math.floor(v * 4));
+    else {
+      const dlt = mx - mn; let h;
+      if (mx === r) h = ((g - b) / dlt) % 6; else if (mx === g) h = (b - r) / dlt + 2; else h = (r - g) / dlt + 4;
+      h *= 60; if (h < 0) h += 360;
+      bin = (Math.floor(h / 30) % 12) * 2 + (s < 0.55 ? 0 : 1);
+    }
+    out[off + bin]++; cnt++;
+  }
+  if (cnt) for (let i = 0; i < 28; i++) out[off + i] = out[off + i] / cnt * 0.5;
+}
+function boxHist(img, box) {
+  const h = new Float32Array(56), k = HW / S.W;
+  regionHist(img, box, k, h, 0, 0.2, 0.8, 0.15, 0.5);   // torso
+  regionHist(img, box, k, h, 28, 0.25, 0.75, 0.55, 0.9); // legs
+  return h;
+}
+function bc(p, q) { let s = 0; for (let i = 0; i < 56; i++) s += Math.sqrt(p[i] * q[i]); return s; }
+function histFromVideo(video, box) {
+  hCtx.drawImage(video, 0, 0, HW, HH);
+  return boxHist(hCtx.getImageData(0, 0, HW, HH).data, box);
+}
+
+/* ---------------- Analysis ---------------- */
+const anaVid = document.createElement('video');
+anaVid.muted = true; anaVid.playsInline = true; anaVid.preload = 'auto';
+// must be in the DOM: Chrome does not decode new frames on seek for detached, paused videos
+anaVid.setAttribute('aria-hidden', 'true');
+anaVid.style.cssText = 'position:fixed;left:0;top:0;width:4px;height:4px;opacity:0.01;pointer-events:none;z-index:-1';
+document.body.appendChild(anaVid);
+function seekTo(v, t) {
+  return new Promise(res => {
+    let done = false; const fin = () => { if (done) return; done = true; v.removeEventListener('seeked', fin); clearTimeout(to); res(); };
+    const to = setTimeout(fin, 4000);
+    v.addEventListener('seeked', fin); v.currentTime = t;
+  });
+}
+function sampleTime(i) { return Math.min(i / SFPS, Math.max(0, S.dur - 0.04)); }
+
+async function analyze() {
+  if (S.analyzing || !S.session) return;
+  S.analyzing = true; S.cancelAna = false; updateButtons();
+  try {
+    if (anaVid.src !== S.url) { anaVid.src = S.url; await new Promise((r, j) => { anaVid.onloadeddata = r; anaVid.onerror = () => j(new Error('เปิดวิดีโอไม่ได้')); }); }
+    const todo = []; for (let i = 0; i < S.N; i++) if (!S.dets[i]) todo.push(i);
+    const t0 = performance.now(); let done = 0;
+    if (todo.length) await seekTo(anaVid, sampleTime(todo[0]));
+    for (let q = 0; q < todo.length; q++) {
+      if (S.cancelAna) break;
+      const i = todo[q];
+      const pre = preprocess(anaVid);
+      hCtx.drawImage(anaVid, 0, 0, HW, HH);
+      const img = hCtx.getImageData(0, 0, HW, HH).data;
+      // start the next seek while the model runs
+      const nextSeek = q + 1 < todo.length ? seekTo(anaVid, sampleTime(todo[q + 1])) : null;
+      const out = (await S.session.run({ images: pre.tensor })).output0;
+      const boxes = decode(out, pre.sc, pre.px, pre.py);
+      for (const b of boxes) b.hist = boxHist(img, b);
+      S.dets[i] = boxes; S.analyzed++; done++;
+      if (nextSeek) await nextSeek;
+      if (done % 5 === 0 || q === todo.length - 1) {
+        const el = (performance.now() - t0) / 1000, eta = el / done * (todo.length - done);
+        $('anaBar').style.width = (S.analyzed / S.N * 100).toFixed(1) + '%';
+        $('anaStatus').textContent = `วิเคราะห์แล้ว ${S.analyzed}/${S.N} เฟรม · เหลืออีกประมาณ ${fmtEta(eta)} · ${(el / done * 1000).toFixed(0)} ms/เฟรม`;
+        drawTimeline();
+      }
+      if (done % 60 === 0 && S.anchors.length) recompute();
+    }
+    if (S.analyzed >= S.N) {
+      $('anaBar').style.width = '100%';
+      $('anaStatus').textContent = `วิเคราะห์เสร็จ (${((performance.now() - t0) / 1000).toFixed(0)} วินาที) · ` + (S.anchors.length ? 'อัปเดตเส้นทางกล้องแล้ว' : 'ต่อไป: แตะที่คนที่ต้องการตาม');
+      saveCache();
+      if (!S.anchors.length) toast('วิเคราะห์เสร็จแล้ว! หยุดวิดีโอแล้วแตะที่คนที่ต้องการตาม', 4000);
+    } else $('anaStatus').textContent = `หยุดไว้ที่ ${S.analyzed}/${S.N} เฟรม (กดวิเคราะห์ต่อได้)`;
+  } catch (e) { console.error(e); toast('วิเคราะห์ผิดพลาด: ' + e.message, 5000); }
+  S.analyzing = false; updateButtons(); recompute(); redraw();
+}
+function fmtEta(s) { if (!isFinite(s)) return '-'; s = Math.round(s); return s >= 60 ? Math.floor(s / 60) + ' นาที ' + (s % 60) + ' วิ' : s + ' วิ'; }
+
+/* ---------------- Cache (IndexedDB) ---------------- */
+function idb() {
+  return new Promise((res, rej) => { try { const r = indexedDB.open('fancam', 1); r.onupgradeneeded = () => r.result.createObjectStore('a'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } });
+}
+async function idbGet(k) { try { const db = await idb(); return await new Promise(r => { const q = db.transaction('a').objectStore('a').get(k); q.onsuccess = () => r(q.result); q.onerror = () => r(null); }); } catch (e) { return null; } }
+async function idbPut(k, v) { try { const db = await idb(); db.transaction('a', 'readwrite').objectStore('a').put(v, k); } catch (e) {} }
+function saveCache() { if (S.analyzed >= S.N) idbPut('det2:' + S.key, { N: S.N, dets: S.dets }); }
+let anchorSaveT;
+function saveAnchors() { clearTimeout(anchorSaveT); anchorSaveT = setTimeout(() => idbPut('anc:' + S.key, S.anchors.map(a => ({ idx: a.idx, box: { x: a.box.x, y: a.box.y, w: a.box.w, h: a.box.h }, hist: a.hist, manual: a.manual }))), 300); }
+
+/* ---------------- Tracking with anchors ---------------- */
+/* Stage lighting changes colours a lot (the same person can drop to 0.3 similarity
+   between seconds), so appearance is compared against both the anchor and a slowly
+   adapting recent appearance (EMA), and motion continuity dominates while the
+   track is unbroken. Appearance matters most when re-acquiring after a loss and
+   when several people are close together. */
+function pass(anchor, dir, end, fillOnly) {
+  let L = anchor.box, lost = 0, lvl = 0.9, exitL = false, exitR = false;
+  const ah = anchor.hist, ema = Float32Array.from(ah);
+  for (let i = anchor.idx + dir; dir > 0 ? i <= end : i >= end; i += dir) {
+    if (fillOnly && S.track[i]) { L = S.track[i]; lost = 0; continue; }
+    const ds = S.dets[i]; if (!ds || !ds.length) { lost++; continue; }
+    const lcx = L.x + L.w / 2, lcy = L.y + L.h / 2, gate = Math.min(0.6 + 0.4 * lost, 3);
+    const cand = [], wide = [];
+    for (const d of ds) {
+      const dc = Math.hypot(d.x + d.w / 2 - lcx, d.y + d.h / 2 - lcy) / L.h;
+      if (dc >= Math.max(gate, 2)) continue;
+      const hr = Math.abs(Math.log(d.h / L.h));
+      const appA = bc(ah, d.hist), appE = bc(ema, d.hist), app = Math.max(appA, appE);
+      (dc < gate ? cand : wide).push({ d, dc, hr, app, appA, appE, sc: 1.5 * app - dc - 0.8 * hr });
+    }
+    let best = null;
+    if (cand.length) {
+      cand.sort((a, b) => b.sc - a.sc);
+      const c = cand[0], second = cand[1];
+      // a jump must look about as much like the anchor as the track normally does
+      const thr = Math.max(lost ? (lost < 10 ? 0.5 : 0.6) : 0.55, lvl - 0.15 - 0.004 * lost);
+      const ok = x => x.appA > thr || x.appE > thr + 0.1;
+      if (!lost) {
+        // unbroken track: a small step of a similar-size box is trusted even if the colours
+        // changed (lighting); a bigger step needs the appearance to really match
+        if ((c.dc < 0.35 && c.hr < 0.4 && c.app > 0.2) || (ok(c) && c.sc > 0)) best = c;
+      } else if (exitL || exitR) {
+        // the person walked out of the frame: expect them back at the same edge
+        const e = cand.filter(x => exitL ? x.d.x < 0.03 * S.W : x.d.x + x.d.w > 0.97 * S.W)[0];
+        if (e && e.appA > Math.max(0.5, lvl - 0.3)) best = e;
+        else if (c.appA > Math.max(thr, 0.75) && c.sc > 0) best = c;
+      } else if (ok(c) && c.sc > 0 && (!second || c.sc - second.sc > 0.1 || c.dc < 0.5)) best = c;
+    }
+    // challenger: someone nearby looks far more like the anchor than the current pick
+    // (e.g. the track slid onto a neighbour while the real person was briefly missed)
+    if (best && best.appA < 0.7) {
+      let ch = null;
+      for (const x of cand.concat(wide)) if (x !== best && x.appA >= 0.75 && x.appA - best.appA >= 0.15 && x.dc < 1.2 && x.hr < 0.5 && (!ch || x.appA > ch.appA)) ch = x;
+      if (ch) best = ch;
+    }
+    if (best) {
+      const d = best.d; S.track[i] = d; S.tsrc[i] = 1; L = d; lost = 0;
+      for (let k = 0; k < 56; k++) ema[k] = 0.85 * ema[k] + 0.15 * d.hist[k];
+      lvl = Math.max(0.995 * lvl, best.appA);   // peak-hold: a weak match cannot lower the bar quickly
+    } else {
+      if (!lost) { exitL = L.x < 0.015 * S.W; exitR = L.x + L.w > 0.985 * S.W; }
+      lost++;
+    }
+  }
+}
+function retrack() {
+  const N = S.N; S.track = new Array(N).fill(null); S.tsrc = new Uint8Array(N);
+  const A = [...S.anchors].sort((a, b) => a.idx - b.idx);
+  if (!A.length) return;
+  for (const a of A) { S.track[a.idx] = a.box; S.tsrc[a.idx] = 2; }
+  pass(A[0], -1, 0, false);
+  for (let k = 0; k < A.length; k++) {
+    const next = A[k + 1];
+    pass(A[k], +1, next ? next.idx - 1 : N - 1, false);
+    if (next) pass(next, -1, A[k].idx + 1, true);
+  }
+}
+
+/* ---------------- Virtual camera path ---------------- */
+function gauss(a, sigma) {
+  const n = a.length, o = new Float64Array(n);
+  if (sigma < 0.5) { o.set(a); return o; }
+  const r = Math.ceil(sigma * 3), k = []; let ks = 0;
+  for (let i = -r; i <= r; i++) { const v = Math.exp(-i * i / (2 * sigma * sigma)); k.push(v); ks += v; }
+  for (let i = 0; i < n; i++) { let s = 0; for (let j = -r; j <= r; j++) s += a[clamp(i + j, 0, n - 1)] * k[j + r]; o[i] = s / ks; }
+  return o;
+}
+function median(a, w) {
+  const n = a.length, o = new Float64Array(n), r = w >> 1, buf = [];
+  for (let i = 0; i < n; i++) { buf.length = 0; for (let j = -r; j <= r; j++) buf.push(a[clamp(i + j, 0, n - 1)]); buf.sort((x, y) => x - y); o[i] = buf[r]; }
+  return o;
+}
+function buildPath() {
+  const N = S.N, known = [];
+  for (let i = 0; i < N; i++) if (S.track[i]) known.push(i);
+  if (!known.length) { S.path = null; return; }
+  const cx = new Float64Array(N), cy = new Float64Array(N), h = new Float64Array(N);
+  const put = (i, b) => { cx[i] = b.x + b.w / 2; cy[i] = b.y + b.h / 2; h[i] = b.h; };
+  for (let i = 0; i <= known[0]; i++) put(i, S.track[known[0]]);
+  for (let i = known[known.length - 1]; i < N; i++) put(i, S.track[known[known.length - 1]]);
+  for (let q = 0; q + 1 < known.length; q++) {
+    const a = known[q], b = known[q + 1], A = S.track[a], B = S.track[b]; put(a, A);
+    for (let i = a + 1; i < b; i++) {
+      const f = (i - a) / (b - a);
+      cx[i] = (A.x + A.w / 2) * (1 - f) + (B.x + B.w / 2) * f; cy[i] = (A.y + A.h / 2) * (1 - f) + (B.y + B.h / 2) * f; h[i] = A.h * (1 - f) + B.h * f;
+    }
+  }
+  for (let i = 0; i < N; i++) if (!S.tsrc[i]) S.tsrc[i] = 3;
+  const sg = SET.smooth * SFPS;
+  // short median first removes one-sample glitches (a wrong box for 0.1 s) before smoothing
+  S.path = { cx: gauss(median(cx, 5), sg), cy: gauss(median(cy, 5), sg), h: gauss(median(h, 9), 2 * sg) };
+}
+function recompute() { retrack(); buildPath(); drawTimeline(); renderAnchorList(); redraw(); }
+
+function camAt(t) {
+  if (!S.path) return { cx: S.W / 2, cy: S.H / 2, h: S.H * SET.subject / 100 };
+  const f = clamp(t * SFPS, 0, S.N - 1), i = Math.floor(f), j = Math.min(i + 1, S.N - 1), a = f - i, P = S.path;
+  return { cx: P.cx[i] * (1 - a) + P.cx[j] * a, cy: P.cy[i] * (1 - a) + P.cy[j] * a, h: P.h[i] * (1 - a) + P.h[j] * a };
+}
+function aspectVal() { const [a, b] = SET.aspect.split(':').map(Number); return a / b; }
+function outSize() { const w = +SET.res, h = Math.round(w / aspectVal() / 2) * 2; return [w, h]; }
+function cropAt(t, aspect) {
+  const W = S.W, H = S.H, c = camAt(t);
+  let ch = clamp(c.h / (SET.subject / 100), H * SET.minCrop / 100, H), cw = ch * aspect;
+  if (cw > W) { cw = W; ch = cw / aspect; }
+  return { cx: clamp(c.cx, cw / 2, W - cw / 2), cy: clamp(c.cy, ch / 2, H - ch / 2), cw, ch };
+}
+const noise = (t, o) => 0.5 * Math.sin(1.3 * t + PH[o]) + 0.3 * Math.sin(2.7 * t + PH[o + 1]) + 0.2 * Math.sin(5.1 * t + PH[o + 2]);
+function drawCam(ctx, ow, oh, t, video) {
+  const c = cropAt(t, ow / oh), k = SET.shake / 10;
+  let dx = 0, dy = 0, r = 0, over = 1;
+  if (k > 0) { dx = k * 0.012 * c.ch * noise(t, 0); dy = k * 0.012 * c.ch * noise(t, 3); r = k * 0.6 * Math.PI / 180 * noise(t, 6); over = 1 + 0.045 * k; }
+  const s = oh / (c.ch / over);
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, ow, oh);
+  ctx.translate(ow / 2, oh / 2); ctx.rotate(r); ctx.scale(s, s); ctx.translate(-c.cx - dx, -c.cy - dy);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(video, 0, 0, S.W, S.H);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+/* ---------------- Main video, overlay, preview ---------------- */
+const vid = $('vid'), ov = $('ov'), ovCtx = ov.getContext('2d'), pv = $('pv'), pvCtx = pv.getContext('2d'), tl = $('tl'), tlCtx = tl.getContext('2d');
+const curIdx = () => clamp(Math.round(vid.currentTime * SFPS), 0, Math.max(0, S.N - 1));
+
+function sizeCanvas(c) {
+  const r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1, w = Math.max(1, Math.round(r.width * d)), h = Math.max(1, Math.round(r.height * d));
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+}
+function drawOverlay() {
+  if (!S.W) return;
+  sizeCanvas(ov);
+  const k = ov.width / S.W, d = window.devicePixelRatio || 1, i = curIdx();
+  ovCtx.clearRect(0, 0, ov.width, ov.height);
+  const ds = S.dets[i] || [], tb = S.track[i], src = S.tsrc[i];
+  ovCtx.lineWidth = 1.5 * d;
+  for (const b of ds) { if (b === tb) continue; ovCtx.strokeStyle = 'rgba(200,205,220,.55)'; ovCtx.strokeRect(b.x * k, b.y * k, b.w * k, b.h * k); }
+  // virtual camera crop
+  if (S.path) {
+    const c = cropAt(vid.currentTime, aspectVal());
+    ovCtx.strokeStyle = 'rgba(255,79,139,.9)'; ovCtx.lineWidth = 2 * d; ovCtx.setLineDash([6 * d, 4 * d]);
+    ovCtx.strokeRect((c.cx - c.cw / 2) * k, (c.cy - c.ch / 2) * k, c.cw * k, c.ch * k); ovCtx.setLineDash([]);
+  }
+  if (tb) {
+    const anc = src === 2;
+    ovCtx.strokeStyle = anc ? '#ffffff' : '#35d07f'; ovCtx.lineWidth = 3 * d;
+    ovCtx.strokeRect(tb.x * k, tb.y * k, tb.w * k, tb.h * k);
+    label(anc ? 'จุดยึด' : 'ตามอยู่', tb.x * k, tb.y * k, anc ? '#ffffff' : '#35d07f');
+  } else if (S.path) {
+    const c = camAt(vid.currentTime), hh = c.h * k, ww = hh * 0.4;
+    ovCtx.strokeStyle = '#f5b43c'; ovCtx.lineWidth = 2 * d; ovCtx.setLineDash([4 * d, 4 * d]);
+    ovCtx.strokeRect(c.cx * k - ww / 2, c.cy * k - hh / 2, ww, hh); ovCtx.setLineDash([]);
+    label('หลุด (เดา)', c.cx * k - ww / 2, c.cy * k - hh / 2, '#f5b43c');
+  }
+  function label(t, x, y, col) {
+    ovCtx.font = `600 ${12 * d}px system-ui,sans-serif`; const w = ovCtx.measureText(t).width + 10 * d, h = 18 * d;
+    y = Math.max(h, y); ovCtx.fillStyle = col; ovCtx.fillRect(x, y - h, w, h); ovCtx.fillStyle = '#000'; ovCtx.fillText(t, x + 5 * d, y - 5 * d);
+  }
+}
+function drawPreview() {
+  if (!S.W || vid.readyState < 2) return;
+  const [ow, oh] = outSize(), pw = 540, ph = Math.round(pw * oh / ow);
+  if (pv.width !== pw || pv.height !== ph) { pv.width = pw; pv.height = ph; }
+  drawCam(pvCtx, pw, ph, vid.currentTime, vid);
+}
+function drawTimeline() {
+  if (!S.N) return;
+  sizeCanvas(tl);
+  const w = tl.width, h = tl.height, d = window.devicePixelRatio || 1, N = S.N, has = S.anchors.length > 0;
+  tlCtx.fillStyle = '#0b0c10'; tlCtx.fillRect(0, 0, w, h);
+  const bw = w / N, top = 6 * d, bh = h - 12 * d;
+  for (let i = 0; i < N; i++) {
+    let col;
+    if (!S.dets[i]) col = '#3a3f4d';
+    else if (!has) col = '#5a6075';
+    else col = (S.tsrc[i] === 1 || S.tsrc[i] === 2) ? '#35d07f' : '#f5b43c';
+    tlCtx.fillStyle = col; tlCtx.fillRect(Math.floor(i * bw), top, Math.ceil(bw), bh);
+  }
+  tlCtx.fillStyle = '#fff';
+  for (const a of S.anchors) tlCtx.fillRect(Math.round((a.idx + 0.5) * bw) - d, 0, 2 * d, h);
+  const x = (vid.currentTime / S.dur) * w;
+  tlCtx.fillStyle = '#ff4f8b'; tlCtx.fillRect(x - 1.5 * d, 0, 3 * d, h);
+  tlCtx.beginPath(); tlCtx.moveTo(x - 6 * d, 0); tlCtx.lineTo(x + 6 * d, 0); tlCtx.lineTo(x, 7 * d); tlCtx.fill();
+}
+function redraw() {
+  drawOverlay(); drawPreview(); drawTimeline();
+  $('timeLbl').textContent = fmt(vid.currentTime) + ' / ' + fmt(S.dur);
+}
+// render loop driven by the video's own frames when playing
+const hasRVFC = 'requestVideoFrameCallback' in HTMLVideoElement.prototype;
+function frameLoop() {
+  if (!S.exporting) redraw();
+  if (!vid.paused && !vid.ended) hasRVFC ? vid.requestVideoFrameCallback(frameLoop) : requestAnimationFrame(frameLoop);
+}
+vid.addEventListener('play', () => { $('btnPlay').textContent = '❚❚'; hasRVFC ? vid.requestVideoFrameCallback(frameLoop) : requestAnimationFrame(frameLoop); });
+vid.addEventListener('pause', () => { $('btnPlay').textContent = '▶︎'; redraw(); });
+vid.addEventListener('seeked', redraw);
+vid.addEventListener('loadeddata', redraw);
+window.addEventListener('resize', redraw);
+
+/* ---------------- Audio graph (shared by playback & export) ---------------- */
+let AC = null, aSrc, aGain, aDest;
+function ensureAudio() {
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    aSrc = AC.createMediaElementSource(vid); aGain = AC.createGain(); aDest = AC.createMediaStreamDestination();
+    aSrc.connect(aGain); aGain.connect(AC.destination); aSrc.connect(aDest);
+  } catch (e) { console.warn('audio graph', e); AC = null; }
+}
+
+/* ---------------- Picking / anchors ---------------- */
+function pointToSrc(e) { const r = ov.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * S.W, y: (e.clientY - r.top) / r.height * S.H }; }
+ov.addEventListener('click', e => {
+  if (!S.W || S.exporting) return;
+  if (!vid.paused) { vid.pause(); }
+  const p = pointToSrc(e), i = curIdx(), ds = S.dets[i] || [];
+  let best = null, bd = Infinity;
+  for (const b of ds) {
+    const inside = p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h;
+    const dd = Math.hypot(p.x - (b.x + b.w / 2), p.y - (b.y + b.h / 2)) / b.h + (inside ? 0 : 1);
+    if (dd < bd && (inside || dd < 1.5)) { bd = dd; best = b; }
+  }
+  let anc;
+  if (best) anc = { idx: i, box: best, hist: best.hist, manual: false };
+  else {
+    const h = S.path ? camAt(vid.currentTime).h : S.H * 0.6, w = h * 0.4;
+    // people tap the torso, which sits ~40% down the body
+    const box = { x: clamp(p.x - w / 2, 0, S.W - w), y: clamp(p.y - h * 0.4, 0, Math.max(0, S.H - h)), w, h: Math.min(h, S.H) };
+    anc = { idx: i, box, hist: histFromVideo(vid, box), manual: true };
+  }
+  S.anchors = S.anchors.filter(a => a.idx !== i); S.anchors.push(anc);
+  saveAnchors(); recompute();
+  toast(best ? `ตั้งจุดยึดที่ ${fmt(i / SFPS)} แล้ว` : `ตั้งจุดยึดแบบกำหนดเองที่ ${fmt(i / SFPS)} (ไม่พบกรอบคนตรงนั้น)`);
+  if (!S.analyzing && S.analyzed < S.N && S.session) toast('ตั้งจุดยึดแล้ว · กด "วิเคราะห์วิดีโอ" เพื่อให้กล้องตามทั้งคลิป', 3500);
+});
+function removeAnchorNear(t) {
+  if (!S.anchors.length) return toast('ยังไม่มีจุดยึด');
+  let best = null, bd = Infinity;
+  for (const a of S.anchors) { const dd = Math.abs(a.idx / SFPS - t); if (dd < bd) { bd = dd; best = a; } }
+  if (bd > 1.5) return toast('ไม่มีจุดยึดใกล้ตำแหน่งนี้ (ภายใน 1.5 วิ)');
+  S.anchors = S.anchors.filter(a => a !== best); saveAnchors(); recompute(); toast('ลบจุดยึดที่ ' + fmt(best.idx / SFPS) + ' แล้ว');
+}
+function renderAnchorList() {
+  const el = $('anchorList'); el.innerHTML = '';
+  [...S.anchors].sort((a, b) => a.idx - b.idx).forEach(a => {
+    const c = document.createElement('span'); c.className = 'chip' + (a.manual ? ' manual' : '');
+    const go = document.createElement('button'); go.textContent = fmt(a.idx / SFPS); go.style.color = 'var(--text)'; go.style.padding = '2px 2px';
+    go.onclick = () => { vid.pause(); vid.currentTime = a.idx / SFPS; };
+    const x = document.createElement('button'); x.textContent = '✕'; x.title = 'ลบจุดยึดนี้';
+    x.onclick = () => { S.anchors = S.anchors.filter(b => b !== a); saveAnchors(); recompute(); };
+    c.append(go, x); el.append(c);
+  });
+}
+function nextLost() {
+  if (!S.anchors.length) return toast('เลือกคนที่จะตามก่อน');
+  const i0 = curIdx();
+  let i = i0 + 1; while (i < S.N && S.tsrc[i] === 3) i++;       // skip current lost run
+  for (; i < S.N; i++) if (S.tsrc[i] === 3 && S.dets[i]) {
+    let e = i; while (e < S.N && S.tsrc[e] === 3) e++;
+    if (e - i >= 3) { vid.pause(); vid.currentTime = i / SFPS; toast(`ช่วงที่หลุด ${fmt(i / SFPS)}–${fmt(e / SFPS)}`); return; }
+    i = e;
+  }
+  toast('ไม่มีช่วงที่หลุดหลังจากนี้แล้ว 🎉');
+}
+
+/* ---------------- Timeline seek ---------------- */
+let tlDrag = false;
+function tlSeek(e) { const r = tl.getBoundingClientRect(); vid.currentTime = clamp((e.clientX - r.left) / r.width, 0, 1) * S.dur; drawTimeline(); }
+tl.addEventListener('pointerdown', e => { if (S.exporting) return; tlDrag = true; tl.setPointerCapture(e.pointerId); vid.pause(); tlSeek(e); });
+tl.addEventListener('pointermove', e => { if (tlDrag) tlSeek(e); });
+tl.addEventListener('pointerup', () => tlDrag = false);
+tl.addEventListener('pointercancel', () => tlDrag = false);
+
+/* ---------------- Buttons ---------------- */
+function togglePlay() { if (S.exporting) return; ensureAudio(); vid.paused ? vid.play() : vid.pause(); }
+function step(dt) { vid.pause(); vid.currentTime = clamp(vid.currentTime + dt, 0, S.dur); }
+$('btnPlay').onclick = togglePlay;
+$('btnBack').onclick = () => step(-1 / SFPS);
+$('btnFwd').onclick = () => step(1 / SFPS);
+$('btnNextLost').onclick = nextLost;
+$('btnDelAnchor').onclick = () => removeAnchorNear(vid.currentTime);
+$('btnClearAnchors').onclick = async () => { if (!S.anchors.length) return; if (await ask('ลบจุดยึดทั้งหมด ' + S.anchors.length + ' จุด?', 'ลบทั้งหมด')) { S.anchors = []; saveAnchors(); recompute(); } };
+$('btnAna').onclick = analyze;
+$('btnAnaCancel').onclick = () => { S.cancelAna = true; };
+$('btnExport').onclick = exportVideo;
+$('btnExpCancel').onclick = () => { expCancel = true; vid.pause(); };
+$('btnNewFile').onclick = () => $('file').click();
+document.addEventListener('keydown', e => {
+  if (!S.W || e.target.tagName === 'INPUT' && e.target.type !== 'range' || $('modal').classList.contains('show')) return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  else if (e.key === 'ArrowLeft' && e.target.type !== 'range') { e.preventDefault(); step(-1 / SFPS); }
+  else if (e.key === 'ArrowRight' && e.target.type !== 'range') { e.preventDefault(); step(1 / SFPS); }
+  else if (e.key === 'n' || e.key === 'N') nextLost();
+  else if (e.key === 'Delete' || e.key === 'Backspace') removeAnchorNear(vid.currentTime);
+});
+function updateButtons() {
+  const ana = S.analyzing, exp = S.exporting;
+  $('btnAna').disabled = ana || exp || !S.session || !S.W || S.analyzed >= S.N;
+  $('btnAna').textContent = !S.session ? 'รอโมเดล…' : S.analyzed >= S.N && S.N ? 'วิเคราะห์เสร็จแล้ว ✓' : S.analyzed ? 'วิเคราะห์ต่อ' : 'วิเคราะห์วิดีโอ';
+  $('btnAnaCancel').hidden = !ana;
+  $('btnExport').disabled = ana || exp || !S.path;
+  $('btnExpCancel').hidden = !exp;
+  $('btnNewFile').disabled = ana || exp;
+  const [ow, oh] = outSize();
+  $('expInfo').textContent = `${ow}×${oh} · ความยาว ${fmt(S.dur)} · อัดแบบเวลาจริง (ใช้เวลาเท่าความยาวคลิป) มีเสียงต้นฉบับ`;
+}
+
+/* ---------------- Settings ---------------- */
+function bindRange(id, key, show) {
+  const el = $(id), lab = $(id.replace('s', 'v'));
+  el.value = SET[key]; lab.textContent = show(SET[key]);
+  el.addEventListener('input', () => {
+    SET[key] = +el.value; lab.textContent = show(SET[key]); saveSet();
+    if (key === 'smooth') { if (S.anchors.length) buildPath(); }
+    redraw();
+  });
+}
+bindRange('sSubject', 'subject', v => v + '%');
+bindRange('sSmooth', 'smooth', v => v.toFixed(2) + ' วิ');
+bindRange('sShake', 'shake', v => v ? String(v) : 'ปิด');
+bindRange('sMinCrop', 'minCrop', v => v + '%');
+function bindSeg(id, key) {
+  const el = $(id), sync = () => el.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v == SET[key]));
+  el.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || S.exporting) return; SET[key] = key === 'res' ? +b.dataset.v : b.dataset.v; saveSet(); sync(); updateButtons(); redraw(); });
+  sync();
+}
+bindSeg('segAspect', 'aspect'); bindSeg('segRes', 'res');
+
+/* ---------------- File loading ---------------- */
+const drop = $('drop');
+drop.onclick = () => $('file').click();
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') $('file').click(); };
+$('file').onchange = e => { const f = e.target.files[0]; if (f) openFile(f, f.name, f.size); e.target.value = ''; };
+['dragenter', 'dragover'].forEach(t => document.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(t => document.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+document.addEventListener('drop', e => { const f = [...(e.dataTransfer?.files || [])].find(f => f.type.startsWith('video/') || /\.(mp4|mov|m4v|webm|mkv)$/i.test(f.name)); if (f && !S.analyzing && !S.exporting) openFile(f, f.name, f.size); });
+
+async function openFile(blobOrUrl, name, size) {
+  if (S.analyzing || S.exporting) return;
+  if (S.url && S.url.startsWith('blob:')) URL.revokeObjectURL(S.url);
+  const url = typeof blobOrUrl === 'string' ? blobOrUrl : URL.createObjectURL(blobOrUrl);
+  Object.assign(S, { url, key: name + '|' + size, dets: [], analyzed: 0, anchors: [], track: [], tsrc: new Uint8Array(0), path: null, W: 0 });
+  vid.src = url;
+  try {
+    await new Promise((res, rej) => { vid.onloadedmetadata = res; vid.onerror = () => rej(new Error('เบราว์เซอร์เปิดวิดีโอนี้ไม่ได้')); });
+  } catch (e) { toast(e.message, 5000); return; }
+  S.W = vid.videoWidth; S.H = vid.videoHeight; S.dur = vid.duration; S.N = Math.floor(S.dur * SFPS) + 1;
+  S.tsrc = new Uint8Array(S.N); S.track = new Array(S.N).fill(null);
+  $('vwrap').style.aspectRatio = S.W + ' / ' + S.H;
+  $('pick').hidden = true; $('work').hidden = false; $('result').hidden = true; $('expBar').style.width = '0'; $('expStatus').textContent = '';
+  $('anaBar').style.width = '0';
+  $('anaStatus').textContent = `${name} · ${S.W}×${S.H} · ${fmt(S.dur)} · ต้องวิเคราะห์ ${S.N} เฟรม`;
+  if (S.H > S.W) toast('วิดีโอนี้เป็นแนวตั้งอยู่แล้ว ใช้ได้ แต่จะได้ผลดีกับวิดีโอแนวนอน', 4000);
+  const cached = await idbGet('det2:' + S.key);
+  if (cached && cached.N === S.N) {
+    S.dets = cached.dets; S.analyzed = S.N; $('anaBar').style.width = '100%';
+    $('anaStatus').textContent = 'ใช้ผลวิเคราะห์ที่เคยทำไว้ของไฟล์นี้ ✓';
+  }
+  const anc = await idbGet('anc:' + S.key);
+  if (anc && anc.length) { S.anchors = anc.filter(a => a.idx < S.N); toast('โหลดจุดยึดเดิม ' + S.anchors.length + ' จุด'); }
+  recompute(); updateButtons(); redraw();
+}
+
+/* ---------------- Export ---------------- */
+let expCancel = false;
+function pickMime() {
+  const c = ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+  return c.find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
+}
+async function exportVideo() {
+  if (S.exporting || !S.path) return;
+  if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) return ask('เบราว์เซอร์นี้ส่งออกวิดีโอไม่ได้ ลองใช้ Chrome / Edge / Safari รุ่นใหม่', 'ตกลง', false);
+  if (S.analyzed < S.N && !(await ask('ยังวิเคราะห์ไม่ครบทั้งคลิป ช่วงที่ยังไม่วิเคราะห์กล้องจะหยุดนิ่ง\nส่งออกเลยไหม?', 'ส่งออกเลย'))) return;
+  ensureAudio();
+  const [ow, oh] = outSize(), mime = pickMime();
+  const can = document.createElement('canvas'); can.width = ow; can.height = oh;
+  const ctx = can.getContext('2d', { alpha: false });
+  const stream = can.captureStream(30);
+  if (aDest) aDest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+  let rec;
+  try { rec = new MediaRecorder(stream, { mimeType: mime || undefined, videoBitsPerSecond: ow >= 1080 ? 8e6 : 5e6, audioBitsPerSecond: 192000 }); }
+  catch (e) { return ask('เริ่มอัดวิดีโอไม่ได้: ' + e.message, 'ตกลง', false); }
+  S.exporting = true; expCancel = false; updateButtons();
+  $('expWarn').hidden = false; $('result').hidden = true; $('expBar').style.width = '0';
+  const chunks = []; rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  const stopped = new Promise(r => rec.onstop = r);
+  vid.pause(); vid.loop = false; vid.playbackRate = 1;
+  await seekTo(vid, 0);
+  drawCam(ctx, ow, oh, 0, vid);
+  if (aGain) aGain.gain.value = 0;     // keep speakers quiet; audio still goes to the recorder
+  const t0 = performance.now();
+  rec.start(1000);
+  let lastDraw = 0, lastUi = 0, wasHidden = document.visibilityState !== 'visible';
+  const onVis = () => { if (document.visibilityState !== 'visible') wasHidden = true; };
+  document.addEventListener('visibilitychange', onVis);
+  const drawFrame = () => {
+    lastDraw = performance.now();
+    drawCam(ctx, ow, oh, vid.currentTime, vid);
+    if (lastDraw - lastUi > 100) {          // UI at ~10 fps is enough and keeps the encoder fed
+      lastUi = lastDraw;
+      if (document.visibilityState === 'visible') { drawPreview(); drawOverlay(); drawTimeline(); }
+      const p = vid.currentTime / S.dur;
+      $('expBar').style.width = (p * 100).toFixed(1) + '%';
+      $('expStatus').textContent = `กำลังอัด ${fmt(vid.currentTime)} / ${fmt(S.dur)} (${Math.round(p * 100)}%)`;
+      $('timeLbl').textContent = fmt(vid.currentTime) + ' / ' + fmt(S.dur);
+    }
+  };
+  const loop = () => { drawFrame(); if (!vid.paused && !vid.ended) hasRVFC ? vid.requestVideoFrameCallback(loop) : requestAnimationFrame(loop); };
+  // rVFC / rAF stop when the page is hidden; a timer keeps drawing (pages playing audio are not throttled hard)
+  const watchdog = setInterval(() => { if (!vid.paused && performance.now() - lastDraw > 45) drawFrame(); }, 15);
+  const ended = new Promise(r => { const f = () => { vid.removeEventListener('ended', f); vid.removeEventListener('pause', f); r(); }; vid.addEventListener('ended', f); vid.addEventListener('pause', f); });
+  try { await vid.play(); } catch (e) { console.error(e); expCancel = true; }
+  hasRVFC ? vid.requestVideoFrameCallback(loop) : requestAnimationFrame(loop);
+  await ended;
+  clearInterval(watchdog); document.removeEventListener('visibilitychange', onVis);
+  drawCam(ctx, ow, oh, vid.currentTime, vid);
+  await new Promise(r => setTimeout(r, 250));
+  rec.stop(); await stopped;
+  stream.getVideoTracks().forEach(t => t.stop());
+  if (aGain) aGain.gain.value = 1;
+  S.exporting = false; $('expWarn').hidden = true; updateButtons();
+  const realDur = (performance.now() - t0) / 1000;
+  if (expCancel || vid.currentTime < S.dur - 0.5) { $('expStatus').textContent = 'ยกเลิกการส่งออกแล้ว'; $('expBar').style.width = '0'; return; }
+  const type = (rec.mimeType || mime || 'video/webm').split(';')[0], ext = type.includes('mp4') ? 'mp4' : 'webm';
+  const blob = new Blob(chunks, { type });
+  showResult(blob, ext, realDur);
+  if (wasHidden) ask('ระหว่างส่งออก หน้านี้ถูกซ่อน (สลับแท็บ/แอป หรือพับจอ) เบราว์เซอร์จึงวาดภาพช้าลง วิดีโออาจกระตุก\nถ้าเห็นว่ากระตุก ให้ส่งออกใหม่โดยเปิดหน้านี้ค้างไว้', 'ตกลง', false);
+}
+let outUrl = null;
+async function showResult(blob, ext, realDur) {
+  if (outUrl) URL.revokeObjectURL(outUrl);
+  outUrl = URL.createObjectURL(blob);
+  const name = 'fancam.' + ext;
+  $('outVid').src = outUrl; $('result').hidden = false;
+  $('expBar').style.width = '100%';
+  $('expStatus').textContent = `เสร็จแล้ว! ใช้เวลา ${realDur.toFixed(0)} วินาที`;
+  $('outInfo').textContent = `${name} · ${(blob.size / 1048576).toFixed(1)} MB` + (ext === 'webm' ? ' (เบราว์เซอร์นี้อัดเป็น MP4 ไม่ได้)' : '');
+  const dl = $('dlLink'); dl.href = outUrl; dl.download = name;
+  dl.onclick = async e => {
+    // inside a claude.ai artifact, <a download> is blocked: use the downloads capability if present
+    if (window.claude && typeof window.claude.use === 'function') {
+      e.preventDefault();
+      try { const d = await window.claude.use('downloads'); if (d) { await d.save({ filename: name, data: blob }); return; } } catch (err) { console.warn(err); }
+      toast('ดาวน์โหลดไม่ได้ในหน้านี้ กดค้างที่วิดีโอด้านบนเพื่อบันทึกแทน', 5000);
+    }
+  };
+  $('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/* ---------------- Debug / test hooks ---------------- */
+window.fancam = { S, SET, recompute, analyze, openFile, camAt, cropAt };
+if (params.get('src')) modelReady.then(() => openFile(params.get('src'), params.get('src'), 'url'));
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# วิดีโอของผู้ใช้ / ผลลัพธ์
+*.mp4
+*.mov
+*.webm
+.DS_Store
+__pycache__/
+.claude/
