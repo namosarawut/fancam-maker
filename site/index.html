@@ -812,7 +812,26 @@ readTokens(); syncThemeBtn();
 
 /* ---------------- Main video, overlay, preview ---------------- */
 const vid = $('vid'), ov = $('ov'), ovCtx = ov.getContext('2d'), pv = $('pv'), pvCtx = pv.getContext('2d');
-const curIdx = () => clamp(Math.round(vid.currentTime * SFPS), 0, Math.max(0, S.N - 1));
+/* Seeking. Mobile browsers take a while to finish each seek; if a new one is requested
+   (or play is pressed) before the last one lands, some of them drop it and resume from the
+   old position. So we remember where the user wants to be, run one seek at a time, and make
+   sure playback starts from that spot. */
+let seekTarget = null, seekTries = 0;
+const shownTime = () => seekTarget ?? vid.currentTime;
+function seekVideo(t) {
+  seekTarget = clamp(t, 0, S.dur || 0); seekTries = 0;
+  if (!vid.seeking) vid.currentTime = seekTarget;     // otherwise applied when the running seek ends
+  drawPlayhead(); $('timeLbl').innerHTML = fmt(seekTarget) + ' <span>/ ' + fmt(S.dur) + '</span>';
+}
+vid.addEventListener('seeked', () => {
+  if (seekTarget == null) return;
+  if (Math.abs(vid.currentTime - seekTarget) > 0.04 && seekTries++ < 3) vid.currentTime = seekTarget;
+  else seekTarget = null;
+});
+vid.addEventListener('playing', () => {
+  if (seekTarget != null && Math.abs(vid.currentTime - seekTarget) > 0.25) vid.currentTime = seekTarget;
+});
+const curIdx = () => clamp(Math.round(shownTime() * SFPS), 0, Math.max(0, S.N - 1));
 const mobile = () => matchMedia('(max-width:760px)').matches;
 
 function sizeCanvas(c) {
@@ -942,8 +961,9 @@ function drawWaveLane() {
 function drawLanes() { drawRuler(); drawTrackLane(); drawThumbLane(); drawWaveLane(); drawPlayhead(); }
 function drawPlayhead() {
   if (!S.dur) return;
-  $('playhead').style.left = (vid.currentTime / S.dur * 100) + '%';
-  $('tlCorner').textContent = fmt(vid.currentTime);
+  const t = shownTime();
+  $('playhead').style.left = (t / S.dur * 100) + '%';
+  $('tlCorner').textContent = fmt(t);
 }
 // called by analysis / export / recompute
 function drawTimeline() { drawTrackLane(); drawPlayhead(); }
@@ -990,11 +1010,13 @@ async function makeWave() {
 }
 
 let tlDrag = false;
-function tlSeek(e) { const r = lanes.getBoundingClientRect(); vid.currentTime = clamp((e.clientX - r.left) / r.width, 0, 1) * S.dur; drawPlayhead(); }
-lanes.addEventListener('pointerdown', e => { if (S.exporting || !S.dur) return; tlDrag = true; lanes.setPointerCapture(e.pointerId); vid.pause(); tlSeek(e); });
+function tlSeek(e) { const r = lanes.getBoundingClientRect(); seekVideo(clamp((e.clientX - r.left) / r.width, 0, 1) * S.dur); }
+function tlEnd(e) { if (!tlDrag) return; tlDrag = false; if (e && e.type === 'pointerup') tlSeek(e); else if (seekTarget != null) seekVideo(seekTarget); redraw(); }
+lanes.addEventListener('pointerdown', e => { if (S.exporting || !S.dur) return; tlDrag = true; try { lanes.setPointerCapture(e.pointerId); } catch (_) {} vid.pause(); tlSeek(e); });
 lanes.addEventListener('pointermove', e => { if (tlDrag) tlSeek(e); });
-lanes.addEventListener('pointerup', () => tlDrag = false);
-lanes.addEventListener('pointercancel', () => tlDrag = false);
+lanes.addEventListener('pointerup', tlEnd);
+lanes.addEventListener('pointercancel', tlEnd);
+lanes.addEventListener('lostpointercapture', tlEnd);
 
 /* ---------------- Camera path graph (speed-curve style) ---------------- */
 const graph = $('graph');
@@ -1032,11 +1054,12 @@ function updateState() {
 }
 function redraw() {
   drawOverlay(); drawPreview(); drawPlayhead(); drawGraph(); updateState();
-  $('timeLbl').innerHTML = fmt(vid.currentTime) + ' <span>/ ' + fmt(S.dur) + '</span>';
+  $('timeLbl').innerHTML = fmt(shownTime()) + ' <span>/ ' + fmt(S.dur) + '</span>';
 }
 // render loop driven by the video's own frames when playing
 const hasRVFC = 'requestVideoFrameCallback' in HTMLVideoElement.prototype;
 function frameLoop() {
+  if (seekTarget != null && !vid.seeking && Math.abs(vid.currentTime - seekTarget) < .3) seekTarget = null;
   if (!S.exporting) redraw();
   if (!vid.paused && !vid.ended) hasRVFC ? vid.requestVideoFrameCallback(frameLoop) : requestAnimationFrame(frameLoop);
 }
@@ -1101,7 +1124,7 @@ function renderAnchorList() {
     it.innerHTML = icon('pin', 'sm') + `<span class="t">${fmt(a.idx / SFPS)}</span><span class="tag">${a.manual ? 'แตะเอง' : 'จากกรอบ'}</span>`;
     const x = document.createElement('button'); x.className = 'x'; x.title = 'ลบมาร์กนี้'; x.innerHTML = icon('x', 'sm');
     x.onclick = ev => { ev.stopPropagation(); S.anchors = S.anchors.filter(b => b !== a); saveAnchors(); recompute(); };
-    it.onclick = () => { vid.pause(); vid.currentTime = a.idx / SFPS; };
+    it.onclick = () => { vid.pause(); seekVideo(a.idx / SFPS); };
     it.append(x); el.append(it);
   });
   updateState();
@@ -1112,15 +1135,22 @@ function nextLost() {
   let i = i0 + 1; while (i < S.N && S.tsrc[i] === 3) i++;       // skip current lost run
   for (; i < S.N; i++) if (S.tsrc[i] === 3 && S.dets[i]) {
     let e = i; while (e < S.N && S.tsrc[e] === 3) e++;
-    if (e - i >= 3) { vid.pause(); vid.currentTime = i / SFPS; toast(`ช่วงนี้หาไม่เจอ ${fmt(i / SFPS)}–${fmt(e / SFPS)}`); return; }
+    if (e - i >= 3) { vid.pause(); seekVideo(i / SFPS); toast(`ช่วงนี้หาไม่เจอ ${fmt(i / SFPS)}–${fmt(e / SFPS)}`); return; }
     i = e;
   }
   toast('หลังจากนี้ตามได้ครบแล้ว');
 }
 
 /* ---------------- Buttons ---------------- */
-function togglePlay() { if (S.exporting) return; ensureAudio(); vid.paused ? vid.play() : vid.pause(); }
-function step(dt) { vid.pause(); vid.currentTime = clamp(vid.currentTime + dt, 0, S.dur); }
+function togglePlay() {
+  if (S.exporting) return; ensureAudio();
+  if (!vid.paused) { vid.pause(); return; }
+  const tgt = seekTarget;
+  const p = vid.play();             // called right away so the tap still counts as a user gesture
+  if (tgt != null && Math.abs(vid.currentTime - tgt) > 0.05) vid.currentTime = tgt;
+  if (p && p.catch) p.catch(() => {});
+}
+function step(dt) { vid.pause(); seekVideo(shownTime() + dt); }
 $('btnPlay').onclick = togglePlay;
 $('btnBack').onclick = () => step(-1 / SFPS);
 $('btnFwd').onclick = () => step(1 / SFPS);
