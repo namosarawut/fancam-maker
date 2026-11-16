@@ -268,32 +268,32 @@ kbd{background:var(--surface2);border-radius:5px;padding:0 5px;font-size:11px;fo
 <body data-tab="ana">
 <div class="app">
   <header class="topbar">
-    <div class="brand"><span class="logo"><i data-i="logo"></i></span><div>Fancam Maker<small>แฟนแคมแนวตั้งจากวิดีโอคอนเสิร์ต</small></div></div>
+    <div class="brand"><span class="logo"><i data-i="logo"></i></span><div>Fancam Maker<small>ทำแฟนแคมแนวตั้งจากคลิปคอนเสิร์ต</small></div></div>
     <nav class="toolbar" id="toolbar" hidden>
-      <button class="ibtn" id="btnNewFile" data-tip="เปิดวิดีโออื่น" aria-label="เปิดวิดีโออื่น"><i data-i="folder"></i></button>
+      <button class="ibtn" id="btnNewFile" data-tip="เปลี่ยนคลิป" aria-label="เปลี่ยนคลิป"><i data-i="folder"></i></button>
       <span class="sep"></span>
-      <button class="ibtn" id="btnNextLost" data-tip="ไปช่วงที่หลุดถัดไป (N)" aria-label="ไปช่วงที่หลุดถัดไป"><i data-i="skip"></i></button>
-      <button class="ibtn" id="btnDelAnchor" data-tip="ลบจุดยึดตรงนี้ (Del)" aria-label="ลบจุดยึดตรงนี้"><i data-i="pinoff"></i></button>
-      <button class="ibtn" id="btnClearAnchors" data-tip="ล้างจุดยึดทั้งหมด" aria-label="ล้างจุดยึดทั้งหมด"><i data-i="trash"></i></button>
+      <button class="ibtn" id="btnNextLost" data-tip="ข้ามไปช่วงที่หาไม่เจอ (N)" aria-label="ข้ามไปช่วงที่หาไม่เจอ"><i data-i="skip"></i></button>
+      <button class="ibtn" id="btnDelAnchor" data-tip="ลบมาร์กตรงนี้ (Del)" aria-label="ลบมาร์กตรงนี้"><i data-i="pinoff"></i></button>
+      <button class="ibtn" id="btnClearAnchors" data-tip="ลบมาร์กทั้งหมด" aria-label="ลบมาร์กทั้งหมด"><i data-i="trash"></i></button>
       <span class="sep"></span>
-      <button class="ibtn" id="btnBoxes" data-tip="แสดงกรอบคน" aria-label="แสดงกรอบคน"><i data-i="eye"></i></button>
-      <button class="ibtn" id="btnCrop" data-tip="แสดงกรอบกล้อง" aria-label="แสดงกรอบกล้อง"><i data-i="crop"></i></button>
+      <button class="ibtn" id="btnBoxes" data-tip="โชว์กรอบรอบตัวคน" aria-label="โชว์กรอบรอบตัวคน"><i data-i="eye"></i></button>
+      <button class="ibtn" id="btnCrop" data-tip="โชว์กรอบภาพที่จะได้" aria-label="โชว์กรอบภาพที่จะได้"><i data-i="crop"></i></button>
     </nav>
     <div class="top-right">
-      <span class="badge" id="epBadge"><span class="dot"></span><span class="txt" id="epText">กำลังโหลดโมเดล…</span></span>
-      <button class="ibtn solid" id="btnTheme" data-tip="สลับธีม" aria-label="สลับธีมสว่าง/มืด"><i data-i="moon"></i></button>
+      <span class="badge" id="epBadge"><span class="dot"></span><span class="txt" id="epText">กำลังโหลด…</span></span>
+      <button class="ibtn solid" id="btnTheme" data-tip="โหมดสว่าง/มืด" aria-label="สลับโหมดสว่างหรือมืด"><i data-i="moon"></i></button>
     </div>
   </header>
 
   <section id="pick">
-    <div class="brand"><span class="logo"><i data-i="logo"></i></span><div>Fancam Maker<small>แฟนแคมแนวตั้งจากวิดีโอคอนเสิร์ต</small></div></div>
+    <div class="brand"><span class="logo"><i data-i="logo"></i></span><div>Fancam Maker<small>ทำแฟนแคมแนวตั้งจากคลิปคอนเสิร์ต</small></div></div>
     <div class="landing">
-      <div id="slot" tabindex="0" role="button" aria-label="เลือกหรือวางไฟล์วิดีโอ"></div>
-      <h2>วางวิดีโอคอนเสิร์ตลงในช่อง</h2>
-      <p>ลากไฟล์มาวาง หรือแตะช่องเพื่อเลือก (MP4 / MOV / WebM)</p>
+      <div id="slot" tabindex="0" role="button" aria-label="เลือกหรือวางคลิป"></div>
+      <h2>ลากคลิปคอนเสิร์ตมาวางตรงนี้</h2>
+      <p>หรือแตะที่ช่องเพื่อเลือกไฟล์ ใช้ได้ทั้ง MP4, MOV และ WebM</p>
       <button class="btn primary" id="btnPick"><i data-i="folder" class="sm"></i>เลือกไฟล์</button>
-      <div class="steps"><span><b>1</b> วิเคราะห์</span><span><b>2</b> แตะคนที่จะตาม</span><span><b>3</b> ปรับกล้อง</span><span><b>4</b> ส่งออก 9:16</span></div>
-      <div class="small" style="margin-top:14px">ประมวลผลในเครื่องทั้งหมด ไม่อัปโหลดวิดีโอ</div>
+      <div class="steps"><span><b>1</b> สแกนคลิป</span><span><b>2</b> แตะคนที่จะตาม</span><span><b>3</b> ปรับมุมกล้อง</span><span><b>4</b> ส่งออกแนวตั้ง</span></div>
+      <div class="small" style="margin-top:14px">ทุกอย่างทำในเครื่องคุณ คลิปไม่ถูกอัปโหลดไปไหน</div>
     </div>
     <input type="file" id="file" accept="video/*" hidden>
   </section>
@@ -302,54 +302,54 @@ kbd{background:var(--surface2);border-radius:5px;padding:0 5px;font-size:11px;fo
     <!-- left: file, analysis, anchors -->
     <aside class="left">
       <section class="panel sec" data-tab="ana">
-        <h3>ไฟล์</h3>
+        <h3>คลิป</h3>
         <div class="filecard">
           <canvas id="fileThumb" width="168" height="168"></canvas>
           <div class="meta"><div class="name" id="fileName">-</div><div class="muted" id="fileMeta"></div></div>
         </div>
       </section>
       <section class="panel sec" data-tab="ana">
-        <h3><span class="grow">วิเคราะห์วิดีโอ</span><span class="count" id="anaPct"></span></h3>
+        <h3><span class="grow">สแกนหาคน</span><span class="count" id="anaPct"></span></h3>
         <div class="prog"><div id="anaBar"></div></div>
         <div class="status" id="anaStatus"></div>
         <div class="row" style="margin-top:12px">
-          <button class="btn primary block" id="btnAna"><i data-i="sparkles" class="sm"></i><span>วิเคราะห์วิดีโอ</span></button>
+          <button class="btn primary block" id="btnAna"><i data-i="sparkles" class="sm"></i><span>สแกนคลิป</span></button>
           <button class="btn block" id="btnAnaCancel" hidden>ยกเลิก</button>
         </div>
       </section>
       <section class="panel sec" data-tab="anc">
-        <h3><span class="grow">จุดยึด</span><span class="count" id="ancCount"></span></h3>
+        <h3><span class="grow">จุดที่มาร์กไว้</span><span class="count" id="ancCount"></span></h3>
         <div class="alist" id="anchorList"></div>
         <div class="legend">
-          <span><i style="background:var(--ok)"></i>เจอคนที่ตาม</span>
-          <span><i style="background:var(--warn)"></i>หลุด (เดา)</span>
-          <span><i style="background:var(--accent)"></i>จุดยึด</span>
+          <span><i style="background:var(--ok)"></i>เจอตัว</span>
+          <span><i style="background:var(--warn)"></i>หาไม่เจอ</span>
+          <span><i style="background:var(--accent)"></i>มาร์ก</span>
         </div>
-        <p class="small" style="margin:12px 0 0">หยุดวิดีโอแล้ว<b>แตะที่ตัวคน</b>เพื่อเพิ่มจุดยึด ถ้ากล้องตามผิดคน ไปที่ช่วงนั้นแล้วแตะคนที่ถูก · <kbd>Space</kbd> เล่น · <kbd>←</kbd><kbd>→</kbd> 0.1 วิ · <kbd>N</kbd> ช่วงที่หลุด</p>
+        <p class="small" style="margin:12px 0 0">หยุดคลิปแล้ว<b>แตะที่ตัวคน</b>เพื่อมาร์ก ถ้ากล้องไปตามคนอื่น ให้เลื่อนไปช่วงนั้นแล้วแตะคนที่ใช่อีกครั้ง<br><kbd>Space</kbd> เล่น/หยุด &nbsp; <kbd>←</kbd><kbd>→</kbd> เลื่อนทีละนิด &nbsp; <kbd>N</kbd> ข้ามไปช่วงที่หาไม่เจอ</p>
       </section>
     </aside>
 
     <!-- center: source + phone preview + transport -->
     <div class="stagewrap">
-      <div class="seg viewswitch" id="viewSwitch"><button data-v="src" class="on">ต้นฉบับ (แตะเลือกคน)</button><button data-v="out">ผลลัพธ์</button></div>
+      <div class="seg viewswitch" id="viewSwitch"><button data-v="src" class="on">ต้นฉบับ</button><button data-v="out">ภาพที่จะได้</button></div>
       <div class="stage" id="stage">
         <div class="srcbox">
           <div class="vwrap" id="vwrap">
             <video id="vid" playsinline preload="auto"></video>
             <canvas id="ov"></canvas>
-            <div class="hint" id="stageHint" hidden><i data-i="target" class="sm"></i><span>แตะที่คนที่ต้องการตาม</span></div>
+            <div class="hint" id="stageHint" hidden><i data-i="target" class="sm"></i><span>แตะคนที่อยากให้กล้องตาม</span></div>
           </div>
         </div>
         <div class="phonebox" id="phonebox">
           <div class="phone"><canvas id="pv" width="540" height="960"></canvas></div>
-          <div class="caption">ผลลัพธ์ <b id="outLbl">9:16</b></div>
+          <div class="caption">ภาพที่จะได้ <b id="outLbl">9:16</b></div>
         </div>
       </div>
       <div class="transport">
         <div class="state" id="stateChip"><i></i><span>-</span></div>
-        <button class="ibtn" id="btnBack" data-tip="ย้อน 0.1 วิ" aria-label="ย้อน 0.1 วินาที"><i data-i="back"></i></button>
+        <button class="ibtn" id="btnBack" data-tip="ถอยทีละนิด" aria-label="ถอยทีละนิด"><i data-i="back"></i></button>
         <button class="playbtn" id="btnPlay" aria-label="เล่น / หยุด"><i data-i="play"></i></button>
-        <button class="ibtn" id="btnFwd" data-tip="เดินหน้า 0.1 วิ" aria-label="เดินหน้า 0.1 วินาที"><i data-i="fwd"></i></button>
+        <button class="ibtn" id="btnFwd" data-tip="เดินหน้าทีละนิด" aria-label="เดินหน้าทีละนิด"><i data-i="fwd"></i></button>
         <div class="tc" id="timeLbl">0:00.0 <span>/ 0:00.0</span></div>
       </div>
     </div>
@@ -357,29 +357,29 @@ kbd{background:var(--surface2);border-radius:5px;padding:0 5px;font-size:11px;fo
     <!-- right: camera + export -->
     <aside class="right">
       <section class="panel sec" data-tab="cam">
-        <h3><span class="grow">กล้อง</span><span class="count">เส้นทางทั้งคลิป</span></h3>
+        <h3><span class="grow">กล้อง</span><span class="count">การเคลื่อนกล้องทั้งคลิป</span></h3>
         <div class="graph"><canvas id="graph"></canvas>
-          <div class="glegend"><span><i style="background:var(--accent)"></i>ตำแหน่งซ้าย–ขวา</span><span><i style="background:var(--pink)"></i>ซูม</span></div>
+          <div class="glegend"><span><i style="background:var(--accent)"></i>แพนซ้าย–ขวา</span><span><i style="background:var(--pink)"></i>ซูม</span></div>
         </div>
         <div class="set">
           <label><span class="lab">ขนาดคนในเฟรม <b id="vSubject"></b></span><input type="range" id="sSubject" min="40" max="95" step="1"></label>
           <label><span class="lab">ความนุ่มของกล้อง <b id="vSmooth"></b></span><input type="range" id="sSmooth" min="0.1" max="2" step="0.05"></label>
-          <label><span class="lab">กล้องสั่นแบบถือมือ <b id="vShake"></b></span><input type="range" id="sShake" min="0" max="10" step="1"></label>
-          <label><span class="lab">ซูมสูงสุด (ครอปเล็กสุด) <b id="vMinCrop"></b></span><input type="range" id="sMinCrop" min="15" max="100" step="1"></label>
+          <label><span class="lab">ฟีลกล้องถือมือ <b id="vShake"></b></span><input type="range" id="sShake" min="0" max="10" step="1"></label>
+          <label><span class="lab">จำกัดการซูม <b id="vMinCrop"></b></span><input type="range" id="sMinCrop" min="15" max="100" step="1"></label>
           <div><div class="seglab">สัดส่วน</div><div class="seg" id="segAspect"><button data-v="9:16">9:16</button><button data-v="4:5">4:5</button><button data-v="1:1">1:1</button></div></div>
           <div><div class="seglab">ความละเอียด</div><div class="seg" id="segRes"><button data-v="1080">1080p</button><button data-v="720">720p</button></div></div>
         </div>
       </section>
       <section class="panel sec" data-tab="exp">
-        <h3>ส่งออกวิดีโอ</h3>
+        <h3>ส่งออกคลิป</h3>
         <p class="muted" id="expInfo" style="margin:0 0 12px"></p>
         <div class="row">
-          <button class="btn primary block" id="btnExport"><i data-i="share" class="sm"></i>ส่งออกวิดีโอ</button>
+          <button class="btn primary block" id="btnExport"><i data-i="share" class="sm"></i>เริ่มส่งออก</button>
           <button class="btn block" id="btnExpCancel" hidden>ยกเลิก</button>
         </div>
         <div class="prog" style="margin-top:12px"><div id="expBar"></div></div>
         <div class="status" id="expStatus"></div>
-        <div class="warnbox" id="expWarn" hidden>กำลังอัดแบบเวลาจริง: <b>เปิดหน้านี้ค้างไว้</b> อย่าสลับแอป/แท็บ หรือปิดหน้าจอ ไม่งั้นวิดีโอจะกระตุก</div>
+        <div class="warnbox" id="expWarn" hidden>ระหว่างนี้<b>เปิดหน้านี้ค้างไว้</b>นะ อย่าสลับแอปหรือปิดจอ ไม่งั้นคลิปจะกระตุก</div>
         <div id="result" hidden>
           <video id="outVid" controls playsinline></video>
           <div class="row" style="margin-top:10px"><a class="btn primary" id="dlLink" download="fancam.mp4"><i data-i="download" class="sm"></i>ดาวน์โหลด</a><span class="small" id="outInfo"></span></div>
@@ -392,8 +392,8 @@ kbd{background:var(--surface2);border-radius:5px;padding:0 5px;font-size:11px;fo
       <div class="timeline">
         <div class="tl-heads">
           <div class="tl-corner" id="tlCorner">0:00</div>
-          <div class="tl-head h-track"><i data-i="target" class="sm lbl-ic"></i><span class="nm">ติดตาม</span><button class="ibtn" id="btnBoxes2" aria-label="แสดงกรอบคน"><i data-i="eye" class="sm"></i></button></div>
-          <div class="tl-head h-thumb"><i data-i="film" class="sm lbl-ic"></i><span class="nm">วิดีโอ</span><button class="ibtn" id="btnCrop2" aria-label="แสดงกรอบกล้อง"><i data-i="crop" class="sm"></i></button></div>
+          <div class="tl-head h-track"><i data-i="target" class="sm lbl-ic"></i><span class="nm">การตาม</span><button class="ibtn" id="btnBoxes2" aria-label="โชว์กรอบรอบตัวคน"><i data-i="eye" class="sm"></i></button></div>
+          <div class="tl-head h-thumb"><i data-i="film" class="sm lbl-ic"></i><span class="nm">คลิป</span><button class="ibtn" id="btnCrop2" aria-label="โชว์กรอบภาพที่จะได้"><i data-i="crop" class="sm"></i></button></div>
           <div class="tl-head h-wave"><i data-i="music" class="sm lbl-ic"></i><span class="nm">เสียง</span><button class="ibtn" id="btnMute" aria-label="ปิด/เปิดเสียง"><i data-i="vol" class="sm"></i></button></div>
         </div>
         <div class="tl-lanes" id="lanes">
@@ -409,8 +409,8 @@ kbd{background:var(--surface2);border-radius:5px;padding:0 5px;font-size:11px;fo
 </div>
 
 <nav class="tabbar" id="tabbar" hidden>
-  <button data-tab="ana" class="on"><i data-i="sparkles"></i>วิเคราะห์</button>
-  <button data-tab="anc"><i data-i="pin"></i>จุดยึด</button>
+  <button data-tab="ana" class="on"><i data-i="sparkles"></i>สแกน</button>
+  <button data-tab="anc"><i data-i="pin"></i>มาร์ก</button>
   <button data-tab="cam"><i data-i="sliders"></i>กล้อง</button>
   <button data-tab="exp"><i data-i="share"></i>ส่งออก</button>
 </nav>
@@ -470,13 +470,13 @@ async function loadModel() {
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const total = +resp.headers.get('content-length') || 12754006;
     const reader = resp.body.getReader(); const parts = []; let got = 0;
-    for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); got += value.length; badge.textContent = 'โหลดโมเดล ' + Math.round(got / total * 100) + '%'; }
+    for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); got += value.length; badge.textContent = 'กำลังโหลด ' + Math.round(got / total * 100) + '%'; }
     const buf = new Uint8Array(got); let o = 0; for (const p of parts) { buf.set(p, o); o += p.length; }
     // WebGL EP cannot run YOLOv8 (no Split op for opset 17), so WASM (SIMD + threads) is the default
     const eps = params.get('ep') ? [params.get('ep')] : ['wasm'];
     for (const ep of eps) {
       try {
-        badge.textContent = 'เตรียมโมเดล (' + ep + ')…';
+        badge.textContent = 'กำลังเตรียม…';
         const s = await ort.InferenceSession.create(buf, { executionProviders: [ep], graphOptimizationLevel: 'all' });
         const t = new ort.Tensor('float32', new Float32Array(3 * IN * IN).fill(0.45), [1, 3, IN, IN]);
         const out = (await s.run({ images: t })).output0;
@@ -484,12 +484,13 @@ async function loadModel() {
         S.session = s; S.ep = ep; break;
       } catch (e) { console.warn('EP failed', ep, e); }
     }
-    if (!S.session) throw new Error('ไม่มี execution provider ที่ใช้ได้');
+    if (!S.session) throw new Error('เบราว์เซอร์นี้รันตัวตรวจจับคนไม่ได้');
     $('epBadge').classList.add('ok');
-    badge.textContent = 'โมเดลพร้อม · ' + S.ep + (S.ep === 'wasm' ? ' ×' + ort.env.wasm.numThreads : '');
+    badge.textContent = 'พร้อมใช้งาน';
+    $('epBadge').title = 'YOLOv8n · ' + S.ep + (S.ep === 'wasm' ? ' ×' + ort.env.wasm.numThreads + ' threads' : '');
   } catch (e) {
-    console.error(e); badge.textContent = 'โหลดโมเดลไม่สำเร็จ'; $('epBadge').classList.add('bad');
-    toast('โหลดโมเดลไม่สำเร็จ: ' + e.message, 6000);
+    console.error(e); badge.textContent = 'โหลดไม่สำเร็จ'; $('epBadge').classList.add('bad');
+    toast('โหลดตัวตรวจจับคนไม่สำเร็จ ลองรีเฟรชหน้าอีกครั้ง', 6000);
   }
   updateButtons();
 }
@@ -582,7 +583,7 @@ async function analyze() {
   if (S.analyzing || !S.session) return;
   S.analyzing = true; S.cancelAna = false; updateButtons();
   try {
-    if (anaVid.src !== S.url) { anaVid.src = S.url; await new Promise((r, j) => { anaVid.onloadeddata = r; anaVid.onerror = () => j(new Error('เปิดวิดีโอไม่ได้')); }); }
+    if (anaVid.src !== S.url) { anaVid.src = S.url; await new Promise((r, j) => { anaVid.onloadeddata = r; anaVid.onerror = () => j(new Error('เปิดคลิปไม่ได้')); }); }
     const todo = []; for (let i = 0; i < S.N; i++) if (!S.dets[i]) todo.push(i);
     const t0 = performance.now(); let done = 0;
     if (todo.length) await seekTo(anaVid, sampleTime(todo[0]));
@@ -603,18 +604,18 @@ async function analyze() {
         const el = (performance.now() - t0) / 1000, eta = el / done * (todo.length - done);
         $('anaBar').style.width = (S.analyzed / S.N * 100).toFixed(1) + '%';
         $('anaPct').textContent = Math.round(S.analyzed / S.N * 100) + '%';
-        $('anaStatus').textContent = `วิเคราะห์แล้ว ${S.analyzed}/${S.N} เฟรม · เหลืออีกประมาณ ${fmtEta(eta)} · ${(el / done * 1000).toFixed(0)} ms/เฟรม`;
+        $('anaStatus').textContent = `สแกนไปแล้ว ${S.analyzed} จาก ${S.N} เฟรม เหลืออีกราว ${fmtEta(eta)}`;
         drawTimeline();
       }
       if (done % 60 === 0 && S.anchors.length) recompute();
     }
     if (S.analyzed >= S.N) {
       $('anaBar').style.width = '100%';
-      $('anaStatus').textContent = `วิเคราะห์เสร็จ (${((performance.now() - t0) / 1000).toFixed(0)} วินาที) · ` + (S.anchors.length ? 'อัปเดตเส้นทางกล้องแล้ว' : 'ต่อไป: แตะที่คนที่ต้องการตาม');
+      $('anaStatus').textContent = `สแกนเสร็จแล้ว ใช้เวลา ${((performance.now() - t0) / 1000).toFixed(0)} วินาที` + (S.anchors.length ? '' : ' ต่อไปแตะคนที่อยากให้กล้องตามได้เลย');
       saveCache();
-      if (!S.anchors.length) toast('วิเคราะห์เสร็จแล้ว! หยุดวิดีโอแล้วแตะที่คนที่ต้องการตาม', 4000);
-    } else $('anaStatus').textContent = `หยุดไว้ที่ ${S.analyzed}/${S.N} เฟรม (กดวิเคราะห์ต่อได้)`;
-  } catch (e) { console.error(e); toast('วิเคราะห์ผิดพลาด: ' + e.message, 5000); }
+      if (!S.anchors.length) toast('สแกนเสร็จแล้ว หยุดคลิปแล้วแตะคนที่อยากให้กล้องตามได้เลย', 4000);
+    } else $('anaStatus').textContent = `หยุดไว้ที่ ${S.analyzed} จาก ${S.N} เฟรม กดสแกนต่อได้`;
+  } catch (e) { console.error(e); toast('สแกนไม่สำเร็จ: ' + e.message, 5000); }
   S.analyzing = false; updateButtons(); recompute(); redraw();
 }
 function fmtEta(s) { if (!isFinite(s)) return '-'; s = Math.round(s); return s >= 60 ? Math.floor(s / 60) + ' นาที ' + (s % 60) + ' วิ' : s + ' วิ'; }
@@ -839,12 +840,12 @@ function drawOverlay() {
   if (tb) {
     const anc = src === 2, col = anc ? '#ffffff' : (TK.ok || '#33c48d');
     ovCtx.strokeStyle = col; ovCtx.lineWidth = 3 * d; rrect(ovCtx, tb.x * k, tb.y * k, tb.w * k, tb.h * k, 8 * d); ovCtx.stroke();
-    label(anc ? 'จุดยึด' : 'ตามอยู่', tb.x * k, tb.y * k, col);
+    label(anc ? 'มาร์ก' : 'ตามอยู่', tb.x * k, tb.y * k, col);
   } else if (S.path) {
     const c = camAt(vid.currentTime), hh = c.h * k, ww = hh * 0.4;
     ovCtx.strokeStyle = TK.warn || '#f2a93b'; ovCtx.lineWidth = 2 * d; ovCtx.setLineDash([4 * d, 4 * d]);
     rrect(ovCtx, c.cx * k - ww / 2, c.cy * k - hh / 2, ww, hh, 8 * d); ovCtx.stroke(); ovCtx.setLineDash([]);
-    label('หลุด (เดา)', c.cx * k - ww / 2, c.cy * k - hh / 2, TK.warn || '#f2a93b');
+    label('หาไม่เจอ', c.cx * k - ww / 2, c.cy * k - hh / 2, TK.warn || '#f2a93b');
   }
   function label(t, x, y, col) {
     ovCtx.font = `600 ${12 * d}px -apple-system,system-ui,sans-serif`;
@@ -1005,7 +1006,7 @@ function drawGraph() {
   for (let k = 0; k <= 4; k++) { const y = Math.round(gy + gh * k / 4) + .5; c.beginPath(); c.moveTo(gx, y); c.lineTo(gx + gw, y); c.stroke(); }
   if (!S.path || !S.dur) {
     c.fillStyle = TK.mute; c.font = `${12 * d}px -apple-system,system-ui,sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillText('แตะเลือกคนเพื่อดูเส้นทางกล้อง', w / 2, h / 2); c.textAlign = 'start'; return;
+    c.fillText('แตะเลือกคนก่อน แล้วกราฟจะขึ้นตรงนี้', w / 2, h / 2); c.textAlign = 'start'; return;
   }
   const P = S.path, N = S.N, X = i => gx + i / (N - 1) * gw;
   const asp = aspectVal(), minH = S.H * SET.minCrop / 100;
@@ -1024,7 +1025,7 @@ function drawGraph() {
 /* ---------------- Per-frame UI ---------------- */
 function updateState() {
   const el = $('stateChip'), i = curIdx(), s = S.tsrc[i];
-  const [txt, col] = !S.anchors.length ? ['ยังไม่เลือกคน', TK.mute] : s === 2 ? ['จุดยึด', TK.accent] : s === 1 ? ['ตามอยู่', TK.ok] : ['หลุด (เดา)', TK.warn];
+  const [txt, col] = !S.anchors.length ? ['ยังไม่เลือกคน', TK.mute] : s === 2 ? ['มาร์ก', TK.accent] : s === 1 ? ['ตามอยู่', TK.ok] : ['หาไม่เจอ', TK.warn];
   el.querySelector('i').style.background = col; el.querySelector('span').textContent = txt;
   $('stageHint').hidden = !(S.W && !S.anchors.length && vid.paused);
   document.querySelectorAll('.aitem').forEach(a => a.classList.toggle('cur', Math.abs(+a.dataset.idx - i) <= 2));
@@ -1081,24 +1082,24 @@ ov.addEventListener('click', e => {
   }
   S.anchors = S.anchors.filter(a => a.idx !== i); S.anchors.push(anc);
   saveAnchors(); recompute();
-  if (!S.analyzing && S.analyzed < S.N && S.session) toast('ตั้งจุดยึดแล้ว · กด "วิเคราะห์วิดีโอ" เพื่อให้กล้องตามทั้งคลิป', 3500);
-  else toast(best ? `ตั้งจุดยึดที่ ${fmt(i / SFPS)} แล้ว` : `ตั้งจุดยึดแบบกำหนดเองที่ ${fmt(i / SFPS)} (ไม่พบกรอบคนตรงนั้น)`);
+  if (!S.analyzing && S.analyzed < S.N && S.session) toast('มาร์กแล้ว กดสแกนคลิปก่อน กล้องถึงจะตามได้ทั้งคลิป', 3500);
+  else toast(best ? `มาร์กไว้ที่ ${fmt(i / SFPS)} แล้ว` : `มาร์กไว้ที่ ${fmt(i / SFPS)} แล้ว ตรงนี้ไม่เจอกรอบคน เลยใช้จุดที่แตะแทน`);
 });
 function removeAnchorNear(t) {
-  if (!S.anchors.length) return toast('ยังไม่มีจุดยึด');
+  if (!S.anchors.length) return toast('ยังไม่ได้มาร์กใคร');
   let best = null, bd = Infinity;
   for (const a of S.anchors) { const dd = Math.abs(a.idx / SFPS - t); if (dd < bd) { bd = dd; best = a; } }
-  if (bd > 1.5) return toast('ไม่มีจุดยึดใกล้ตำแหน่งนี้ (ภายใน 1.5 วิ)');
-  S.anchors = S.anchors.filter(a => a !== best); saveAnchors(); recompute(); toast('ลบจุดยึดที่ ' + fmt(best.idx / SFPS) + ' แล้ว');
+  if (bd > 1.5) return toast('แถวนี้ไม่มีมาร์ก');
+  S.anchors = S.anchors.filter(a => a !== best); saveAnchors(); recompute(); toast('ลบมาร์กที่ ' + fmt(best.idx / SFPS) + ' แล้ว');
 }
 function renderAnchorList() {
   const el = $('anchorList'); el.innerHTML = '';
   $('ancCount').textContent = S.anchors.length ? S.anchors.length + ' จุด' : '';
-  if (!S.anchors.length) { el.innerHTML = '<div class="empty">ยังไม่มีจุดยึด แตะที่คนในวิดีโอเพื่อเริ่มตาม</div>'; return; }
+  if (!S.anchors.length) { el.innerHTML = '<div class="empty">ยังไม่ได้มาร์กใคร แตะคนในคลิปเพื่อเริ่มได้เลย</div>'; return; }
   [...S.anchors].sort((a, b) => a.idx - b.idx).forEach(a => {
     const it = document.createElement('div'); it.className = 'aitem'; it.dataset.idx = a.idx;
-    it.innerHTML = icon('pin', 'sm') + `<span class="t">${fmt(a.idx / SFPS)}</span><span class="tag">${a.manual ? 'กำหนดเอง' : 'กรอบคน'}</span>`;
-    const x = document.createElement('button'); x.className = 'x'; x.title = 'ลบจุดยึดนี้'; x.innerHTML = icon('x', 'sm');
+    it.innerHTML = icon('pin', 'sm') + `<span class="t">${fmt(a.idx / SFPS)}</span><span class="tag">${a.manual ? 'แตะเอง' : 'จากกรอบ'}</span>`;
+    const x = document.createElement('button'); x.className = 'x'; x.title = 'ลบมาร์กนี้'; x.innerHTML = icon('x', 'sm');
     x.onclick = ev => { ev.stopPropagation(); S.anchors = S.anchors.filter(b => b !== a); saveAnchors(); recompute(); };
     it.onclick = () => { vid.pause(); vid.currentTime = a.idx / SFPS; };
     it.append(x); el.append(it);
@@ -1106,15 +1107,15 @@ function renderAnchorList() {
   updateState();
 }
 function nextLost() {
-  if (!S.anchors.length) return toast('เลือกคนที่จะตามก่อน');
+  if (!S.anchors.length) return toast('แตะเลือกคนก่อนนะ');
   const i0 = curIdx();
   let i = i0 + 1; while (i < S.N && S.tsrc[i] === 3) i++;       // skip current lost run
   for (; i < S.N; i++) if (S.tsrc[i] === 3 && S.dets[i]) {
     let e = i; while (e < S.N && S.tsrc[e] === 3) e++;
-    if (e - i >= 3) { vid.pause(); vid.currentTime = i / SFPS; toast(`ช่วงที่หลุด ${fmt(i / SFPS)}–${fmt(e / SFPS)}`); return; }
+    if (e - i >= 3) { vid.pause(); vid.currentTime = i / SFPS; toast(`ช่วงนี้หาไม่เจอ ${fmt(i / SFPS)}–${fmt(e / SFPS)}`); return; }
     i = e;
   }
-  toast('ไม่มีช่วงที่หลุดหลังจากนี้แล้ว 🎉');
+  toast('หลังจากนี้ตามได้ครบแล้ว');
 }
 
 /* ---------------- Buttons ---------------- */
@@ -1125,7 +1126,7 @@ $('btnBack').onclick = () => step(-1 / SFPS);
 $('btnFwd').onclick = () => step(1 / SFPS);
 $('btnNextLost').onclick = nextLost;
 $('btnDelAnchor').onclick = () => removeAnchorNear(vid.currentTime);
-$('btnClearAnchors').onclick = async () => { if (!S.anchors.length) return toast('ยังไม่มีจุดยึด'); if (await ask('ลบจุดยึดทั้งหมด ' + S.anchors.length + ' จุด?', 'ลบทั้งหมด')) { S.anchors = []; saveAnchors(); recompute(); } };
+$('btnClearAnchors').onclick = async () => { if (!S.anchors.length) return toast('ยังไม่ได้มาร์กใคร'); if (await ask('ลบมาร์กทั้งหมด ' + S.anchors.length + ' จุดเลยไหม', 'ลบเลย')) { S.anchors = []; saveAnchors(); recompute(); } };
 $('btnAna').onclick = analyze;
 $('btnAnaCancel').onclick = () => { S.cancelAna = true; };
 $('btnExport').onclick = exportVideo;
@@ -1162,14 +1163,14 @@ document.addEventListener('keydown', e => {
 function updateButtons() {
   const ana = S.analyzing, exp = S.exporting;
   $('btnAna').disabled = ana || exp || !S.session || !S.W || S.analyzed >= S.N;
-  $('btnAna').querySelector('span').textContent = !S.session ? 'รอโมเดล…' : ana ? 'กำลังวิเคราะห์…' : S.analyzed >= S.N && S.N ? 'วิเคราะห์เสร็จแล้ว' : S.analyzed ? 'วิเคราะห์ต่อ' : 'วิเคราะห์วิดีโอ';
+  $('btnAna').querySelector('span').textContent = !S.session ? 'รอสักครู่…' : ana ? 'กำลังสแกน…' : S.analyzed >= S.N && S.N ? 'สแกนเสร็จแล้ว' : S.analyzed ? 'สแกนต่อ' : 'สแกนคลิป';
   $('btnAnaCancel').hidden = !ana;
   $('anaPct').textContent = S.N ? Math.round(S.analyzed / S.N * 100) + '%' : '';
   $('btnExport').disabled = ana || exp || !S.path;
   $('btnExpCancel').hidden = !exp;
   $('btnNewFile').disabled = ana || exp;
   const [ow, oh] = outSize();
-  $('expInfo').textContent = `${ow}×${oh} · ยาว ${fmt(S.dur)} · อัดแบบเวลาจริง (ใช้เวลาเท่าความยาวคลิป) พร้อมเสียงต้นฉบับ`;
+  $('expInfo').textContent = `${ow}×${oh} ยาว ${fmt(S.dur)} มีเสียงต้นฉบับ ใช้เวลาส่งออกพอๆ กับความยาวคลิป`;
 }
 
 /* ---------------- Settings ---------------- */
@@ -1225,7 +1226,7 @@ function overSlot(x, y) { const r = slot.getBoundingClientRect(), m = 40; return
 function startDrag(e) {
   if (busy()) return;
   if (!$('work').hidden) { pick.hidden = false; pick.classList.add('overlay'); }
-  if (!INTRO.card) { INTRO.card = makeCard('วิดีโอ'); document.body.appendChild(INTRO.card); INTRO.x = e.clientX; INTRO.y = e.clientY; cardLoop(); }
+  if (!INTRO.card) { INTRO.card = makeCard('คลิป'); document.body.appendChild(INTRO.card); INTRO.x = e.clientX; INTRO.y = e.clientY; cardLoop(); }
 }
 function endDrag() {
   cancelAnimationFrame(INTRO.raf);
@@ -1340,7 +1341,7 @@ async function openFile(blobOrUrl, name, size, opts = {}) {
   THUMBS.list = []; WAVE.peaks = null;
   vid.src = url;
   try {
-    await new Promise((res, rej) => { vid.onloadedmetadata = res; vid.onerror = () => rej(new Error('เบราว์เซอร์เปิดวิดีโอนี้ไม่ได้')); });
+    await new Promise((res, rej) => { vid.onloadedmetadata = res; vid.onerror = () => rej(new Error('เปิดคลิปนี้ไม่ได้ ลองแปลงเป็น MP4 ก่อน')); });
   } catch (e) { toast(e.message, 5000); return false; }
   S.W = vid.videoWidth; S.H = vid.videoHeight; S.dur = vid.duration; S.N = Math.floor(S.dur * SFPS) + 1;
   S.tsrc = new Uint8Array(S.N); S.track = new Array(S.N).fill(null);
@@ -1350,16 +1351,16 @@ async function openFile(blobOrUrl, name, size, opts = {}) {
   $('anaBar').style.width = '0';
   $('fileName').textContent = name.split('/').pop();
   $('fileMeta').textContent = `${S.W}×${S.H} · ${fmt(S.dur)}` + (typeof size === 'number' ? ` · ${(size / 1048576).toFixed(1)} MB` : '');
-  $('anaStatus').textContent = `ตรวจหาคนทุก 0.1 วินาที (${S.N} เฟรม) ประมวลผลในเครื่อง ไม่อัปโหลดไฟล์`;
-  if (S.H > S.W) toast('วิดีโอนี้เป็นแนวตั้งอยู่แล้ว ใช้ได้ แต่จะได้ผลดีกับวิดีโอแนวนอน', 4000);
+  $('anaStatus').textContent = `จะสแกนหาคนทุก 0.1 วินาที รวม ${S.N} เฟรม`;
+  if (S.H > S.W) toast('คลิปนี้เป็นแนวตั้งอยู่แล้ว ใช้ได้นะ แต่กับคลิปแนวนอนจะเห็นผลชัดกว่า', 4000);
   const cached = await idbGet('det2:' + S.key);
   if (cached && cached.N === S.N) {
     S.dets = cached.dets; S.analyzed = S.N; $('anaBar').style.width = '100%';
-    $('anaStatus').textContent = 'ใช้ผลวิเคราะห์ที่เคยทำไว้ของไฟล์นี้';
+    $('anaStatus').textContent = 'เคยสแกนคลิปนี้ไว้แล้ว ไม่ต้องสแกนใหม่';
     if (mobile()) { document.body.dataset.tab = 'anc'; $('tabbar').querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.tab === 'anc')); }
   }
   const anc = await idbGet('anc:' + S.key);
-  if (anc && anc.length) { S.anchors = anc.filter(a => a.idx < S.N); toast('โหลดจุดยึดเดิม ' + S.anchors.length + ' จุด'); }
+  if (anc && anc.length) { S.anchors = anc.filter(a => a.idx < S.N); toast('ดึงมาร์กเดิมกลับมา ' + S.anchors.length + ' จุด'); }
   requestAnimationFrame(() => { layoutStage(); recompute(); drawLanes(); updateButtons(); redraw(); });
   makeThumbs(); makeWave();
   return true;
@@ -1373,8 +1374,8 @@ function pickMime() {
 }
 async function exportVideo() {
   if (S.exporting || !S.path) return;
-  if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) return ask('เบราว์เซอร์นี้ส่งออกวิดีโอไม่ได้ ลองใช้ Chrome / Edge / Safari รุ่นใหม่', 'ตกลง', false);
-  if (S.analyzed < S.N && !(await ask('ยังวิเคราะห์ไม่ครบทั้งคลิป ช่วงที่ยังไม่วิเคราะห์กล้องจะหยุดนิ่ง\nส่งออกเลยไหม?', 'ส่งออกเลย'))) return;
+  if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) return ask('เบราว์เซอร์นี้ส่งออกคลิปไม่ได้ ลองเปิดใน Chrome, Edge หรือ Safari เวอร์ชันใหม่', 'ตกลง', false);
+  if (S.analyzed < S.N && !(await ask('ยังสแกนไม่ครบทั้งคลิป ช่วงที่ยังไม่ได้สแกน กล้องจะค้างอยู่กับที่\nจะส่งออกเลยไหม', 'ส่งออกเลย'))) return;
   ensureAudio();
   const [ow, oh] = outSize(), mime = pickMime();
   const can = document.createElement('canvas'); can.width = ow; can.height = oh;
@@ -1383,7 +1384,7 @@ async function exportVideo() {
   if (aDest) aDest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
   let rec;
   try { rec = new MediaRecorder(stream, { mimeType: mime || undefined, videoBitsPerSecond: ow >= 1080 ? 8e6 : 5e6, audioBitsPerSecond: 192000 }); }
-  catch (e) { return ask('เริ่มอัดวิดีโอไม่ได้: ' + e.message, 'ตกลง', false); }
+  catch (e) { return ask('เริ่มส่งออกไม่ได้: ' + e.message, 'ตกลง', false); }
   S.exporting = true; expCancel = false; updateButtons();
   $('expWarn').hidden = false; $('result').hidden = true; $('expBar').style.width = '0';
   const chunks = []; rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
@@ -1405,7 +1406,7 @@ async function exportVideo() {
       if (document.visibilityState === 'visible') { drawPreview(); drawOverlay(); drawTimeline(); }
       const p = vid.currentTime / S.dur;
       $('expBar').style.width = (p * 100).toFixed(1) + '%';
-      $('expStatus').textContent = `กำลังอัด ${fmt(vid.currentTime)} / ${fmt(S.dur)} (${Math.round(p * 100)}%)`;
+      $('expStatus').textContent = `กำลังส่งออก ${Math.round(p * 100)}% (${fmt(vid.currentTime)} จาก ${fmt(S.dur)})`;
       $('timeLbl').innerHTML = fmt(vid.currentTime) + ' <span>/ ' + fmt(S.dur) + '</span>';
     }
   };
@@ -1424,11 +1425,11 @@ async function exportVideo() {
   applyMute();
   S.exporting = false; $('expWarn').hidden = true; updateButtons();
   const realDur = (performance.now() - t0) / 1000;
-  if (expCancel || vid.currentTime < S.dur - 0.5) { $('expStatus').textContent = 'ยกเลิกการส่งออกแล้ว'; $('expBar').style.width = '0'; return; }
+  if (expCancel || vid.currentTime < S.dur - 0.5) { $('expStatus').textContent = 'ยกเลิกแล้ว'; $('expBar').style.width = '0'; return; }
   const type = (rec.mimeType || mime || 'video/webm').split(';')[0], ext = type.includes('mp4') ? 'mp4' : 'webm';
   const blob = new Blob(chunks, { type });
   showResult(blob, ext, realDur);
-  if (wasHidden) ask('ระหว่างส่งออก หน้านี้ถูกซ่อน (สลับแท็บ/แอป หรือพับจอ) เบราว์เซอร์จึงวาดภาพช้าลง วิดีโออาจกระตุก\nถ้าเห็นว่ากระตุก ให้ส่งออกใหม่โดยเปิดหน้านี้ค้างไว้', 'ตกลง', false);
+  if (wasHidden) ask('ระหว่างส่งออกมีการสลับแอปหรือแท็บ คลิปอาจกระตุกบางช่วง\nถ้าเจอ ลองส่งออกใหม่โดยเปิดหน้านี้ค้างไว้', 'ตกลง', false);
 }
 let outUrl = null;
 async function showResult(blob, ext, realDur) {
@@ -1437,15 +1438,15 @@ async function showResult(blob, ext, realDur) {
   const name = 'fancam.' + ext;
   $('outVid').src = outUrl; $('result').hidden = false;
   $('expBar').style.width = '100%';
-  $('expStatus').textContent = `เสร็จแล้ว! ใช้เวลา ${realDur.toFixed(0)} วินาที`;
-  $('outInfo').textContent = `${name} · ${(blob.size / 1048576).toFixed(1)} MB` + (ext === 'webm' ? ' (เบราว์เซอร์นี้อัดเป็น MP4 ไม่ได้)' : '');
+  $('expStatus').textContent = `เสร็จแล้ว ใช้เวลา ${realDur.toFixed(0)} วินาที`;
+  $('outInfo').textContent = `${name} · ${(blob.size / 1048576).toFixed(1)} MB` + (ext === 'webm' ? ' (เบราว์เซอร์นี้เซฟเป็น MP4 ไม่ได้)' : '');
   const dl = $('dlLink'); dl.href = outUrl; dl.download = name;
   dl.onclick = async e => {
     // inside a claude.ai artifact, <a download> is blocked: use the downloads capability if present
     if (window.claude && typeof window.claude.use === 'function') {
       e.preventDefault();
       try { const d = await window.claude.use('downloads'); if (d) { await d.save({ filename: name, data: blob }); return; } } catch (err) { console.warn(err); }
-      toast('ดาวน์โหลดไม่ได้ในหน้านี้ กดค้างที่วิดีโอด้านบนเพื่อบันทึกแทน', 5000);
+      toast('ดาวน์โหลดจากหน้านี้ไม่ได้ ให้กดค้างที่คลิปด้านบนแล้วเลือกบันทึกแทน', 5000);
     }
   };
   $('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
