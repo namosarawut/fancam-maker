@@ -570,6 +570,28 @@ anaVid.muted = true; anaVid.playsInline = true; anaVid.preload = 'auto';
 anaVid.setAttribute('aria-hidden', 'true');
 anaVid.style.cssText = 'position:fixed;left:0;top:0;width:4px;height:4px;opacity:0.01;pointer-events:none;z-index:-1';
 document.body.appendChild(anaVid);
+/* iOS Safari ignores preload and loads no picture data until a video has played, so
+   'loadeddata' never fires and frames cannot be drawn or seeked. Wait for the first frame;
+   if it does not come, start a short muted inline play (allowed without a tap) and pause. */
+function primeVideo(v, keepMuted = true) {
+  return new Promise((res, rej) => {
+    if (v.readyState >= 2) return res();
+    let kick, to;
+    const cleanup = () => { clearTimeout(kick); clearTimeout(to); v.removeEventListener('loadeddata', ok); v.removeEventListener('error', bad); };
+    const ok = () => { cleanup(); res(); };
+    const bad = () => { cleanup(); rej(new Error('เปิดคลิปไม่ได้')); };
+    v.addEventListener('loadeddata', ok); v.addEventListener('error', bad);
+    kick = setTimeout(() => {
+      if (v.readyState >= 2) return ok();
+      const wasMuted = v.muted, t0 = v.currentTime; v.muted = true; v.playsInline = true;
+      const back = () => { if (!keepMuted) v.muted = wasMuted; };
+      const p = v.play();
+      const stop = () => { v.pause(); try { v.currentTime = t0; } catch (e) {} back(); };
+      if (p && p.then) p.then(stop, back); else stop();
+    }, 800);
+    to = setTimeout(() => { cleanup(); v.readyState >= 1 ? res() : rej(new Error('เปิดคลิปไม่ได้')); }, 12000);
+  });
+}
 function seekTo(v, t) {
   return new Promise(res => {
     let done = false; const fin = () => { if (done) return; done = true; v.removeEventListener('seeked', fin); clearTimeout(to); res(); };
@@ -583,7 +605,8 @@ async function analyze() {
   if (S.analyzing || !S.session) return;
   S.analyzing = true; S.cancelAna = false; updateButtons();
   try {
-    if (anaVid.src !== S.url) { anaVid.src = S.url; await new Promise((r, j) => { anaVid.onloadeddata = r; anaVid.onerror = () => j(new Error('เปิดคลิปไม่ได้')); }); }
+    if (anaVid.src !== S.url) anaVid.src = S.url;
+    await primeVideo(anaVid);
     const todo = []; for (let i = 0; i < S.N; i++) if (!S.dets[i]) todo.push(i);
     const t0 = performance.now(); let done = 0;
     if (todo.length) await seekTo(anaVid, sampleTime(todo[0]));
@@ -604,6 +627,7 @@ async function analyze() {
         const el = (performance.now() - t0) / 1000, eta = el / done * (todo.length - done);
         $('anaBar').style.width = (S.analyzed / S.N * 100).toFixed(1) + '%';
         $('anaPct').textContent = Math.round(S.analyzed / S.N * 100) + '%';
+        if (vid.paused) drawOverlay();   // show boxes as soon as the current spot is scanned
         $('anaStatus').textContent = `สแกนไปแล้ว ${S.analyzed} จาก ${S.N} เฟรม เหลืออีกราว ${fmtEta(eta)}`;
         drawTimeline();
       }
@@ -975,7 +999,7 @@ async function makeThumbs() {
   v.style.cssText = 'position:fixed;left:0;top:0;width:4px;height:4px;opacity:.01;pointer-events:none;z-index:-1'; document.body.appendChild(v);
   v.src = url;
   try {
-    await new Promise((r, j) => { v.onloadeddata = r; v.onerror = j; });
+    await primeVideo(v);
     const n = clamp(Math.round(S.dur / 2.5), 12, 48), th = 96, tw = Math.round(th * S.W / S.H);
     for (let k = 0; k < n; k++) {
       if (S.url !== url) break;
@@ -1284,11 +1308,12 @@ document.addEventListener('drop', e => {
 function cardThumb(card, file) {
   const v = document.createElement('video'), url = URL.createObjectURL(file);
   v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = url;
-  v.onloadeddata = () => { v.currentTime = Math.min(1.5, (v.duration || 3) / 3); };
+  v.style.cssText = 'position:fixed;left:0;top:0;width:4px;height:4px;opacity:.01;pointer-events:none;z-index:-1'; document.body.appendChild(v);
+  primeVideo(v).then(() => { v.currentTime = Math.min(1.5, (v.duration || 3) / 3); }, () => v.remove());
   v.onseeked = () => {
     const c = card.querySelector('canvas'), x = c.getContext('2d'), s = Math.min(v.videoWidth, v.videoHeight * c.width / c.height);
     x.drawImage(v, (v.videoWidth - s) / 2, 0, s, s * c.height / c.width, 0, 0, c.width, c.height);
-    URL.revokeObjectURL(url); v.removeAttribute('src');
+    URL.revokeObjectURL(url); v.removeAttribute('src'); v.remove();
   };
 }
 const ease = 'cubic-bezier(.2,.8,.2,1)';
@@ -1375,6 +1400,7 @@ async function openFile(blobOrUrl, name, size, opts = {}) {
   } catch (e) { toast(e.message, 5000); return false; }
   S.W = vid.videoWidth; S.H = vid.videoHeight; S.dur = vid.duration; S.N = Math.floor(S.dur * SFPS) + 1;
   S.tsrc = new Uint8Array(S.N); S.track = new Array(S.N).fill(null);
+  primeVideo(vid, false).then(() => redraw(), () => {});
   $('vwrap').style.aspectRatio = S.W + ' / ' + S.H;
   if (!opts.quiet) showEditor();
   $('result').hidden = true; $('expBar').style.width = '0'; $('expStatus').textContent = '';
@@ -1483,6 +1509,26 @@ async function showResult(blob, ext, realDur) {
 }
 
 /* ---------------- Debug / test hooks ---------------- */
+if (params.get('debug')) {
+  const box = document.createElement('pre');
+  box.style.cssText = 'position:fixed;left:6px;top:6px;z-index:999;background:rgba(0,0,0,.78);color:#0f0;font:11px/1.35 monospace;padding:6px 8px;border-radius:8px;pointer-events:none;max-width:70vw;white-space:pre-wrap';
+  document.body.appendChild(box);
+  const errs = [];
+  window.addEventListener('error', e => errs.push(String(e.message).slice(0, 80)));
+  window.addEventListener('unhandledrejection', e => errs.push('rej: ' + String(e.reason && e.reason.message || e.reason).slice(0, 80)));
+  const _warn = console.warn; console.warn = (...a) => { errs.push('warn: ' + a.map(String).join(' ').slice(0, 80)); _warn(...a); };
+  setInterval(() => {
+    const tv = THUMBS.vid;
+    box.textContent = [
+      'vid rs=' + vid.readyState + ' t=' + vid.currentTime.toFixed(2) + (vid.seeking ? ' seeking' : ''),
+      'ana rs=' + anaVid.readyState + ' t=' + anaVid.currentTime.toFixed(2) + ' analyzed=' + S.analyzed + '/' + S.N + (S.analyzing ? ' RUN' : ''),
+      'thumbs=' + THUMBS.list.filter(Boolean).length + (THUMBS.busy ? ' busy' : '') + ' tv rs=' + (tv ? tv.readyState : '-'),
+      'wave=' + (WAVE.peaks ? WAVE.peaks.length : 0) + (WAVE.busy ? ' busy' : ''),
+      'ep=' + S.ep + ' coi=' + self.crossOriginIsolated,
+      ...errs.slice(-5),
+    ].join('\n');
+  }, 500);
+}
 window.fancam = { S, SET, recompute, analyze, openFile, camAt, cropAt };
 if (params.get('src')) modelReady.then(() => openFile(params.get('src'), params.get('src'), 'url'));
 </script>
