@@ -5,180 +5,398 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fancam Maker</title>
 <script src="coi-sw.js"></script>
+<script>
+  // apply the saved theme before first paint
+  try { const t = localStorage.getItem('fancam.theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
 <style>
+/* ---------- design tokens: light = lavender studio, dark = night editor ---------- */
 :root{
-  --bg:#0e0f13; --card:#171920; --card2:#1f222b; --line:#2b2f3a; --text:#e9eaf0; --mute:#9aa0b0;
-  --accent:#ff4f8b; --accent2:#ff7aa8; --ok:#35d07f; --warn:#f5b43c; --bad:#ff5a5a; --tick:#ffffff;
+  --bg:#cdc9f1; --bg2:#e2dff8;
+  --surface:#ffffff; --surface2:#f5f4fc; --surface3:#ecebf7;
+  --line:#ebe9f5; --text:#2a2840; --mute:#a19fb7; --mute2:#6f6d88;
+  --accent:#7b6cf6; --accent2:#a597ff; --accent-soft:#eeebff; --accent-ink:#5a4bd6;
+  --pink:#e08ad6; --ok:#33c48d; --warn:#f2a93b; --bad:#ef5b6a;
+  --shadow:0 10px 30px rgba(84,72,170,.10), 0 1px 2px rgba(84,72,170,.06);
+  --stage:#0c0b12; --phone:#121118;
+  --r-xl:24px; --r-lg:18px; --r-md:12px;
+  color-scheme: light;
+}
+:root[data-theme="dark"]{
+  --bg:#0b0b0e; --bg2:#141419;
+  --surface:#17171c; --surface2:#1f1f26; --surface3:#2a2a33;
+  --line:#26262e; --text:#f2f2f7; --mute:#7f7f8e; --mute2:#a9a9b8;
+  --accent:#7b6cf6; --accent2:#9c8fff; --accent-soft:#29254a; --accent-ink:#b8aeff;
+  --pink:#e46fd0; --shadow:0 10px 30px rgba(0,0,0,.35);
+  --stage:#000; --phone:#000;
   color-scheme: dark;
 }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b0b0e; --bg2:#141419;
+    --surface:#17171c; --surface2:#1f1f26; --surface3:#2a2a33;
+    --line:#26262e; --text:#f2f2f7; --mute:#7f7f8e; --mute2:#a9a9b8;
+    --accent:#7b6cf6; --accent2:#9c8fff; --accent-soft:#29254a; --accent-ink:#b8aeff;
+    --pink:#e46fd0; --shadow:0 10px 30px rgba(0,0,0,.35);
+    --stage:#000; --phone:#000;
+    color-scheme: dark;
+  }
+}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI","Noto Sans Thai","Sukhumvit Set",sans-serif;-webkit-text-size-adjust:100%}
-header{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(14,15,19,.92);backdrop-filter:blur(8px);z-index:20}
-header h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.2px}
-header h1 span{color:var(--accent)}
-header .sub{color:var(--mute);font-size:13px}
-header .badge{margin-left:auto;font-size:12px;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:3px 10px;white-space:nowrap}
-.wrap{max-width:1280px;margin:0 auto;padding:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
-h2{font-size:15px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
-h2 .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;flex:none}
-.hint{color:var(--mute);font-size:13px;margin:0 0 10px}
-#drop{border:2px dashed var(--line);border-radius:16px;padding:42px 16px;text-align:center;cursor:pointer;transition:.15s;background:var(--card)}
-#drop.over,#drop:hover{border-color:var(--accent);background:#1b1d25}
-#drop .big{font-size:18px;font-weight:600;margin-bottom:6px}
-#drop .mute{color:var(--mute);font-size:13px}
-.cols{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:16px;align-items:start}
-@media (max-width:860px){.cols{grid-template-columns:minmax(0,1fr)}}
-.stack{display:grid;gap:16px;min-width:0}
-.vwrap{position:relative;width:100%;background:#000;border-radius:10px;overflow:hidden;touch-action:manipulation}
+html,body{margin:0;min-height:100%}
+body{background:linear-gradient(160deg,var(--bg2),var(--bg));background-attachment:fixed;color:var(--text);
+  font:14px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Sukhumvit Set","Noto Sans Thai","Segoe UI",system-ui,sans-serif;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit}
+.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.i.sm{width:16px;height:16px}
+[hidden]{display:none!important}
+
+/* ---------- shell ---------- */
+.app{max-width:1560px;margin:0 auto;padding:16px 20px 24px}
+.topbar{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:.1px;white-space:nowrap}
+.brand .logo{width:34px;height:34px;border-radius:11px;background:var(--accent);color:#fff;display:grid;place-items:center;box-shadow:0 6px 16px rgba(123,108,246,.35)}
+.brand small{display:block;font-weight:500;font-size:12px;color:var(--mute);margin-top:-2px}
+.toolbar{display:flex;gap:4px;background:var(--surface);border-radius:16px;padding:6px;box-shadow:var(--shadow);margin:0 auto}
+.top-right{display:flex;align-items:center;gap:8px}
+.badge{font-size:12px;color:var(--mute2);background:var(--surface);border-radius:999px;padding:6px 12px;box-shadow:var(--shadow);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.badge .dot{width:7px;height:7px;border-radius:50%;background:var(--warn)}
+.badge.ok .dot{background:var(--ok)} .badge.bad .dot{background:var(--bad)}
+
+.ibtn{position:relative;width:40px;height:40px;border:0;border-radius:12px;background:transparent;color:var(--mute2);display:grid;place-items:center;cursor:pointer;transition:background .15s,color .15s}
+.ibtn:hover:not(:disabled){background:var(--surface2);color:var(--text)}
+.ibtn.on{color:var(--accent);background:var(--accent-soft)}
+.ibtn:disabled{opacity:.35;cursor:not-allowed}
+.ibtn.solid{background:var(--surface);box-shadow:var(--shadow)}
+.sep{width:1px;background:var(--line);margin:6px 4px}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--text);color:var(--surface);font-size:12px;padding:4px 9px;border-radius:8px;white-space:nowrap;pointer-events:none;z-index:30}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:0 16px;min-height:42px;background:var(--surface2);color:var(--text);cursor:pointer;font-weight:600;font-size:14px;text-decoration:none;transition:filter .15s,background .15s}
+.btn:hover:not(:disabled){filter:brightness(.97)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--accent);color:#fff;box-shadow:0 8px 20px rgba(123,108,246,.32)}
+.btn.primary:hover:not(:disabled){background:var(--accent2);filter:none}
+.btn.ghost{background:transparent;color:var(--mute2)}
+.btn.block{width:100%}
+
+/* ---------- landing ---------- */
+#pick{min-height:calc(100vh - 120px);display:grid;place-items:center}
+#drop{width:min(640px,100%);background:var(--surface);border-radius:28px;padding:56px 28px;text-align:center;cursor:pointer;box-shadow:var(--shadow);border:2px dashed transparent;transition:.2s}
+#drop:hover,#drop.over{border-color:var(--accent2);transform:translateY(-2px)}
+#drop .big-ic{width:72px;height:72px;margin:0 auto 18px;border-radius:22px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+#drop .big-ic .i{width:34px;height:34px}
+#drop h2{margin:0 0 6px;font-size:22px}
+#drop p{margin:0 0 22px;color:var(--mute2)}
+.steps{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:22px}
+.steps span{font-size:12px;color:var(--mute2);background:var(--surface2);border-radius:999px;padding:5px 12px}
+.steps b{color:var(--accent)}
+
+/* ---------- editor grid ---------- */
+.work{display:grid;grid-template-columns:280px minmax(0,1fr) 320px;grid-template-rows:auto 1fr;grid-template-areas:"left stage right" "left tl right";gap:16px;align-items:start}
+.panel{background:var(--surface);border-radius:var(--r-xl);box-shadow:var(--shadow);padding:18px;min-width:0}
+.left{grid-area:left;display:grid;gap:16px}
+.right{grid-area:right;display:grid;gap:16px}
+.stagewrap{grid-area:stage;min-width:0;display:grid;gap:14px}
+.tlwrap{grid-area:tl;min-width:0}
+.panel h3{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px}
+.panel h3 .grow{flex:1}
+.panel h3 .count{font-size:12px;color:var(--mute);font-weight:500}
+.muted{color:var(--mute2);font-size:13px}
+.small{font-size:12px;color:var(--mute)}
+
+/* file card */
+.filecard{display:flex;gap:12px;align-items:center}
+.filecard canvas{width:84px;height:84px;border-radius:14px;background:var(--surface3);object-fit:cover;flex:none}
+.filecard .meta{min-width:0}
+.filecard .name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* analysis */
+.prog{height:8px;background:var(--surface3);border-radius:99px;overflow:hidden}
+.prog>div{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--pink));border-radius:99px;transition:width .25s}
+.status{font-size:12.5px;color:var(--mute2);margin-top:8px;min-height:19px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* anchor list (folder-tree style) */
+.alist{display:grid;gap:2px;max-height:260px;overflow:auto;margin:0 -8px;padding:0 8px}
+.aitem{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;cursor:pointer;color:var(--mute2)}
+.aitem:hover{background:var(--surface2);color:var(--text)}
+.aitem.cur{color:var(--accent);background:var(--accent-soft)}
+.aitem .t{font-variant-numeric:tabular-nums;font-weight:600}
+.aitem .tag{font-size:11px;color:var(--mute);margin-left:auto}
+.aitem .x{opacity:0;border:0;background:transparent;color:var(--mute);border-radius:8px;width:26px;height:26px;display:grid;place-items:center;cursor:pointer}
+.aitem:hover .x{opacity:1}
+.aitem .x:hover{background:var(--surface3);color:var(--bad)}
+.empty{font-size:13px;color:var(--mute);padding:6px 0}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--mute2);margin-top:12px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* stage */
+.stage{display:flex;gap:14px;align-items:stretch;min-width:0}
+.srcbox{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.vwrap{position:relative;width:100%;background:var(--stage);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow);touch-action:manipulation}
 .vwrap video{display:block;width:100%;height:100%}
 .vwrap canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
-.ctrl{display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap}
-.time{font-variant-numeric:tabular-nums;color:var(--mute);font-size:13px;margin-left:auto}
-button,.btn{appearance:none;border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:10px;padding:8px 12px;font:inherit;font-size:14px;cursor:pointer;min-height:38px;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
-button:hover:not(:disabled),.btn:hover{border-color:#454b5a}
-button:disabled{opacity:.45;cursor:not-allowed}
-button.primary,.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
-button.primary:hover:not(:disabled){background:var(--accent2)}
-button.icon{width:40px;justify-content:center;padding:0}
-#tl{display:block;width:100%;height:40px;margin-top:10px;border-radius:8px;cursor:pointer;touch-action:none;background:#0b0c10}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mute);margin-top:6px}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.chip{display:inline-flex;align-items:center;gap:4px;background:#232633;border:1px solid var(--line);border-radius:999px;padding:2px 4px 2px 10px;font-size:12px;font-variant-numeric:tabular-nums}
-.chip button{min-height:0;padding:2px 7px;border:0;background:transparent;color:var(--mute);border-radius:999px;font-size:12px}
-.chip button:hover{color:var(--text);background:#30344a}
-.chip.manual{border-style:dashed}
-.prog{height:8px;background:#0b0c10;border-radius:99px;overflow:hidden;margin-top:8px}
-.prog>div{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#ffa65c);transition:width .2s}
-.status{font-size:13px;color:var(--mute);margin-top:6px;min-height:20px}
-.ana{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.ana .grow{flex:1;min-width:160px}
-#pvBox{display:flex;justify-content:center;background:#000;border-radius:10px;padding:8px}
-#pv{display:block;max-width:100%;max-height:62vh;border-radius:6px;background:#000}
-.set{display:grid;gap:12px;margin-top:12px}
+.hint{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:rgba(20,18,32,.72);backdrop-filter:blur(8px);color:#fff;font-size:13px;padding:7px 14px;border-radius:999px;pointer-events:none;display:flex;gap:8px;align-items:center;white-space:nowrap}
+.phonebox{flex:none;display:flex;flex-direction:column;align-items:center;gap:8px}
+.phone{background:var(--phone);border-radius:26px;padding:7px;box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,255,255,.06)}
+#pv{display:block;border-radius:20px;background:#000;height:var(--stageH,380px);width:auto}
+.caption{font-size:12px;color:var(--mute2);display:flex;align-items:center;gap:6px}
+.caption b{color:var(--text);font-weight:600}
+
+/* transport pill */
+.transport{display:flex;align-items:center;gap:6px;justify-content:center;background:var(--surface);border-radius:18px;box-shadow:var(--shadow);padding:8px 12px;margin:0 auto;max-width:100%;flex-wrap:wrap}
+.tc{font-variant-numeric:tabular-nums;font-weight:600;font-size:15px;min-width:132px;text-align:center}
+.tc span{color:var(--mute);font-weight:500}
+.playbtn{width:46px;height:46px;border-radius:14px;border:0;background:var(--accent);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 8px 18px rgba(123,108,246,.35)}
+.playbtn:hover{background:var(--accent2)}
+.playbtn .i{width:22px;height:22px}
+.state{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mute2);padding:0 6px;min-width:112px}
+.state i{width:8px;height:8px;border-radius:50%;background:var(--mute)}
+.seg.viewswitch{display:none}
+
+/* timeline */
+.timeline{display:grid;grid-template-columns:150px minmax(0,1fr);background:var(--surface);border-radius:var(--r-xl);box-shadow:var(--shadow);overflow:hidden}
+.tl-heads{border-right:1px solid var(--line)}
+.tl-corner{height:34px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 14px;font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
+.tl-head{display:flex;align-items:center;gap:8px;padding:0 10px 0 14px;border-bottom:1px solid var(--line);color:var(--mute2);font-size:13px}
+.tl-head:last-child{border-bottom:0}
+.tl-head .nm{flex:1;white-space:nowrap}
+.tl-head .ibtn{width:32px;height:32px;border-radius:10px}
+.h-track{height:46px}.h-thumb{height:64px}.h-wave{height:56px}
+.tl-lanes{position:relative;cursor:pointer;touch-action:none;min-width:0}
+.tl-lanes canvas{display:block;width:100%}
+#ruler{height:34px;border-bottom:1px solid var(--line)}
+#laneTrack{height:46px;border-bottom:1px solid var(--line)}
+#laneThumbs{height:64px;border-bottom:1px solid var(--line)}
+#laneWave{height:56px}
+#playhead{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--accent);pointer-events:none;left:0}
+#playhead::before{content:"";position:absolute;top:0;left:50%;width:12px;height:12px;transform:translate(-50%,0) rotate(45deg);margin-top:-6px;background:var(--accent);border-radius:2px}
+
+/* camera panel */
+.graph{background:var(--surface2);border-radius:16px;padding:10px 10px 6px}
+#graph{display:block;width:100%;height:150px}
+.glegend{display:flex;gap:14px;font-size:11.5px;color:var(--mute2);padding:4px 4px 0}
+.glegend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:3px}
+.set{display:grid;gap:14px;margin-top:16px}
 .set label{display:grid;gap:4px;font-size:13px}
-.set .lab{display:flex;justify-content:space-between;color:var(--mute)}
+.set .lab{display:flex;justify-content:space-between;color:var(--mute2)}
 .set .lab b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
-input[type=range]{width:100%;accent-color:var(--accent);height:24px}
-.seg{display:flex;background:#0b0c10;border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
-.seg button{flex:1;border:0;background:transparent;min-height:32px;padding:4px 6px;font-size:13px;justify-content:center}
-.seg button.on{background:var(--card2);color:var(--accent2);font-weight:600}
-#result video{width:100%;max-height:60vh;border-radius:10px;background:#000;margin-top:10px}
-.warnbox{background:#2a2213;border:1px solid #574414;color:#f5d48a;border-radius:10px;padding:8px 10px;font-size:13px;margin-top:10px}
-#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#262a36;border:1px solid var(--line);color:var(--text);padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:50;max-width:calc(100% - 32px);text-align:center}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:24px;background:transparent;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:99px;background:linear-gradient(90deg,var(--accent) var(--p,50%),var(--surface3) var(--p,50%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:4px solid var(--accent);margin-top:-6px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+input[type=range]::-moz-range-track{height:6px;border-radius:99px;background:var(--surface3)}
+input[type=range]::-moz-range-progress{height:6px;border-radius:99px;background:var(--accent)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#fff;border:4px solid var(--accent)}
+.seg{display:flex;background:var(--surface2);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;background:transparent;min-height:34px;border-radius:9px;font-size:13px;color:var(--mute2);cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--accent);font-weight:600;box-shadow:0 2px 8px rgba(84,72,170,.12)}
+.seglab{font-size:13px;color:var(--mute2);margin-bottom:6px}
+
+/* export */
+.warnbox{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--text);border-radius:12px;padding:9px 12px;font-size:12.5px;margin-top:10px}
+#result video{width:100%;max-height:52vh;border-radius:16px;background:#000;margin-top:12px;display:block}
+
+/* toast + modal */
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(16px);background:var(--text);color:var(--surface);padding:11px 18px;border-radius:14px;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:50;max-width:calc(100% - 32px);text-align:center;box-shadow:var(--shadow)}
 #toast.show{opacity:1;transform:translateX(-50%)}
-#modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;place-items:center;z-index:60;padding:16px}
+#modal{position:fixed;inset:0;background:rgba(20,16,40,.45);backdrop-filter:blur(4px);display:none;place-items:center;z-index:60;padding:16px}
 #modal.show{display:grid}
-#modal .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;max-width:420px;width:100%}
-#modal .box p{margin:0 0 14px;white-space:pre-line}
-#modal .box .row{justify-content:flex-end}
-[hidden]{display:none!important}
-.small{font-size:12px;color:var(--mute)}
-kbd{background:#232633;border:1px solid var(--line);border-radius:4px;padding:0 4px;font-size:11px}
+#modal .box{background:var(--surface);border-radius:22px;padding:22px;max-width:420px;width:100%;box-shadow:var(--shadow)}
+#modal .box p{margin:0 0 18px;white-space:pre-line}
+#modal .row{justify-content:flex-end}
+.tabbar{display:none}
+kbd{background:var(--surface2);border-radius:5px;padding:0 5px;font-size:11px;font-family:inherit}
+
+/* ---------- medium: stage on top, panels side by side ---------- */
+@media (max-width:1180px){
+  .work{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"stage stage" "tl tl" "left right"}
+}
+/* ---------- phone: dark-editor style, one column + tab bar ---------- */
+@media (max-width:760px){
+  .app{padding:10px 12px calc(84px + env(safe-area-inset-bottom))}
+  .topbar{gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  .brand small,.badge .txt{display:none}
+  .top-right{margin-left:auto}
+  .toolbar{order:3;width:100%;justify-content:space-between;margin:0}
+  .work{grid-template-columns:minmax(0,1fr);grid-template-areas:"stage" "tl" "left" "right";gap:12px}
+  .panel{padding:16px;border-radius:20px}
+  .stage{flex-direction:column}
+  .phonebox{display:none}
+  .stage.out .srcbox{display:none}
+  .stage.out .phonebox{display:flex}
+  #pv{height:min(58vh,560px);width:auto;max-width:calc(100vw - 48px)}
+  .seg.viewswitch{display:flex;width:100%}
+  .transport{width:100%;justify-content:space-between;padding:8px}
+  .tc{min-width:0;font-size:14px}
+  .state{display:none}
+  .timeline{grid-template-columns:44px minmax(0,1fr);border-radius:20px}
+  .tl-head{padding:0;justify-content:center}
+  .tl-head .nm,.tl-head .lbl-ic{display:none}
+  .tl-corner{padding:0;justify-content:center;font-size:10px}
+  .h-thumb,#laneThumbs{height:52px}
+  .sec{display:none}
+  body[data-tab="ana"] .sec[data-tab="ana"],body[data-tab="anc"] .sec[data-tab="anc"],
+  body[data-tab="cam"] .sec[data-tab="cam"],body[data-tab="exp"] .sec[data-tab="exp"]{display:block}
+  .left,.right{gap:12px}
+  .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);box-shadow:0 -6px 24px rgba(0,0,0,.12);padding:8px 8px calc(8px + env(safe-area-inset-bottom));justify-content:space-around}
+  .tabbar button{border:0;background:transparent;display:grid;justify-items:center;gap:3px;font-size:11px;color:var(--mute);padding:4px 10px;cursor:pointer;position:relative}
+  .tabbar button.on{color:var(--accent)}
+  .tabbar button.on::after{content:"";width:4px;height:4px;border-radius:50%;background:var(--accent);position:absolute;bottom:-3px}
+  [data-tip]:hover::after{display:none}
+}
 </style>
 </head>
-<body>
-<header>
-  <h1><span>Fancam</span> Maker</h1>
-  <span class="sub">ทำแฟนแคมแนวตั้งจากวิดีโอคอนเสิร์ต</span>
-  <span class="badge" id="epBadge">กำลังโหลดโมเดล…</span>
-</header>
+<body data-tab="ana">
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><span class="logo"><i data-i="logo"></i></span><div>Fancam Maker<small>แฟนแคมแนวตั้งจากวิดีโอคอนเสิร์ต</small></div></div>
+    <nav class="toolbar" id="toolbar" hidden>
+      <button class="ibtn" id="btnNewFile" data-tip="เปิดวิดีโออื่น" aria-label="เปิดวิดีโออื่น"><i data-i="folder"></i></button>
+      <span class="sep"></span>
+      <button class="ibtn" id="btnNextLost" data-tip="ไปช่วงที่หลุดถัดไป (N)" aria-label="ไปช่วงที่หลุดถัดไป"><i data-i="skip"></i></button>
+      <button class="ibtn" id="btnDelAnchor" data-tip="ลบจุดยึดตรงนี้ (Del)" aria-label="ลบจุดยึดตรงนี้"><i data-i="pinoff"></i></button>
+      <button class="ibtn" id="btnClearAnchors" data-tip="ล้างจุดยึดทั้งหมด" aria-label="ล้างจุดยึดทั้งหมด"><i data-i="trash"></i></button>
+      <span class="sep"></span>
+      <button class="ibtn" id="btnBoxes" data-tip="แสดงกรอบคน" aria-label="แสดงกรอบคน"><i data-i="eye"></i></button>
+      <button class="ibtn" id="btnCrop" data-tip="แสดงกรอบกล้อง" aria-label="แสดงกรอบกล้อง"><i data-i="crop"></i></button>
+    </nav>
+    <div class="top-right">
+      <span class="badge" id="epBadge"><span class="dot"></span><span class="txt" id="epText">กำลังโหลดโมเดล…</span></span>
+      <button class="ibtn solid" id="btnTheme" data-tip="สลับธีม" aria-label="สลับธีมสว่าง/มืด"><i data-i="moon"></i></button>
+    </div>
+  </header>
 
-<div class="wrap">
   <section id="pick">
     <div id="drop" tabindex="0" role="button">
-      <div class="big">เลือกวิดีโอ</div>
-      <div class="mute">แตะเพื่อเลือกไฟล์ หรือลากไฟล์วิดีโอแนวนอนมาวางตรงนี้ (MP4 / MOV / WebM)</div>
+      <div class="big-ic"><i data-i="upload"></i></div>
+      <h2>เลือกวิดีโอคอนเสิร์ต</h2>
+      <p>แตะเพื่อเลือกไฟล์ หรือลากวิดีโอแนวนอนมาวางตรงนี้ (MP4 / MOV / WebM)</p>
+      <span class="btn primary"><i data-i="folder" class="sm"></i>เลือกไฟล์</span>
+      <div class="steps"><span><b>1</b> วิเคราะห์</span><span><b>2</b> แตะคนที่จะตาม</span><span><b>3</b> ปรับกล้อง</span><span><b>4</b> ส่งออก 9:16</span></div>
+      <div class="small" style="margin-top:14px">ประมวลผลในเครื่องทั้งหมด ไม่อัปโหลดวิดีโอ</div>
     </div>
     <input type="file" id="file" accept="video/*" hidden>
   </section>
 
-  <main id="work" hidden>
-    <div class="cols">
-      <div class="stack">
-        <section class="card">
-          <h2><span class="n">1</span>วิเคราะห์วิดีโอ</h2>
-          <div class="ana">
-            <button class="primary" id="btnAna">วิเคราะห์วิดีโอ</button>
-            <button id="btnAnaCancel" hidden>ยกเลิก</button>
-            <div class="grow">
-              <div class="prog"><div id="anaBar"></div></div>
-              <div class="status" id="anaStatus">ตรวจหาคนทุก 0.1 วินาที (ทำงานในเครื่อง ไม่อัปโหลดไฟล์)</div>
-            </div>
-          </div>
-        </section>
+  <main class="work" id="work" hidden>
+    <!-- left: file, analysis, anchors -->
+    <aside class="left">
+      <section class="panel sec" data-tab="ana">
+        <h3>ไฟล์</h3>
+        <div class="filecard">
+          <canvas id="fileThumb" width="168" height="168"></canvas>
+          <div class="meta"><div class="name" id="fileName">-</div><div class="muted" id="fileMeta"></div></div>
+        </div>
+      </section>
+      <section class="panel sec" data-tab="ana">
+        <h3><span class="grow">วิเคราะห์วิดีโอ</span><span class="count" id="anaPct"></span></h3>
+        <div class="prog"><div id="anaBar"></div></div>
+        <div class="status" id="anaStatus"></div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary block" id="btnAna"><i data-i="sparkles" class="sm"></i><span>วิเคราะห์วิดีโอ</span></button>
+          <button class="btn block" id="btnAnaCancel" hidden>ยกเลิก</button>
+        </div>
+      </section>
+      <section class="panel sec" data-tab="anc">
+        <h3><span class="grow">จุดยึด</span><span class="count" id="ancCount"></span></h3>
+        <div class="alist" id="anchorList"></div>
+        <div class="legend">
+          <span><i style="background:var(--ok)"></i>เจอคนที่ตาม</span>
+          <span><i style="background:var(--warn)"></i>หลุด (เดา)</span>
+          <span><i style="background:var(--accent)"></i>จุดยึด</span>
+        </div>
+        <p class="small" style="margin:12px 0 0">หยุดวิดีโอแล้ว<b>แตะที่ตัวคน</b>เพื่อเพิ่มจุดยึด ถ้ากล้องตามผิดคน ไปที่ช่วงนั้นแล้วแตะคนที่ถูก · <kbd>Space</kbd> เล่น · <kbd>←</kbd><kbd>→</kbd> 0.1 วิ · <kbd>N</kbd> ช่วงที่หลุด</p>
+      </section>
+    </aside>
 
-        <section class="card">
-          <h2><span class="n">2</span>เลือกคนที่จะตาม</h2>
-          <p class="hint">หยุดวิดีโอแล้ว<b>แตะที่ตัวคน</b>ที่ต้องการตาม ถ้ากล้องตามผิดคน ให้ไปที่ช่วงนั้นแล้วแตะคนที่ถูกอีกครั้ง (เพิ่มจุดยึด) ถ้าไม่มีกรอบรอบตัวคน แตะกลางตัวเขาได้เลย</p>
+    <!-- center: source + phone preview + transport -->
+    <div class="stagewrap">
+      <div class="seg viewswitch" id="viewSwitch"><button data-v="src" class="on">ต้นฉบับ (แตะเลือกคน)</button><button data-v="out">ผลลัพธ์</button></div>
+      <div class="stage" id="stage">
+        <div class="srcbox">
           <div class="vwrap" id="vwrap">
             <video id="vid" playsinline preload="auto"></video>
             <canvas id="ov"></canvas>
+            <div class="hint" id="stageHint" hidden><i data-i="target" class="sm"></i><span>แตะที่คนที่ต้องการตาม</span></div>
           </div>
-          <div class="ctrl">
-            <button class="icon" id="btnBack" title="ย้อน 0.1 วินาที">◀︎</button>
-            <button class="icon primary" id="btnPlay" title="เล่น / หยุด">▶︎</button>
-            <button class="icon" id="btnFwd" title="เดินหน้า 0.1 วินาที">▶︎▶︎</button>
-            <span class="time" id="timeLbl">0:00.0 / 0:00.0</span>
-          </div>
-          <canvas id="tl"></canvas>
-          <div class="legend">
-            <span><i style="background:var(--ok)"></i>เจอคนที่ตาม</span>
-            <span><i style="background:var(--warn)"></i>หลุด (เดาตำแหน่ง)</span>
-            <span><i style="background:#fff"></i>จุดยึด</span>
-            <span><i style="background:#3a3f4d"></i>ยังไม่วิเคราะห์</span>
-          </div>
-          <div class="row">
-            <button id="btnNextLost">ไปช่วงที่หลุดถัดไป</button>
-            <button id="btnDelAnchor">ลบจุดยึด</button>
-            <button id="btnClearAnchors">ล้างจุดยึดทั้งหมด</button>
-          </div>
-          <div class="chips" id="anchorList"></div>
-          <p class="small" style="margin:10px 0 0">คีย์ลัด: <kbd>Space</kbd> เล่น/หยุด · <kbd>←</kbd><kbd>→</kbd> ทีละ 0.1 วิ · <kbd>N</kbd> ช่วงที่หลุดถัดไป · <kbd>Del</kbd> ลบจุดยึด</p>
-        </section>
+        </div>
+        <div class="phonebox">
+          <div class="phone"><canvas id="pv" width="540" height="960"></canvas></div>
+          <div class="caption">ผลลัพธ์ <b id="outLbl">9:16</b></div>
+        </div>
       </div>
+      <div class="transport">
+        <div class="state" id="stateChip"><i></i><span>-</span></div>
+        <button class="ibtn" id="btnBack" data-tip="ย้อน 0.1 วิ" aria-label="ย้อน 0.1 วินาที"><i data-i="back"></i></button>
+        <button class="playbtn" id="btnPlay" aria-label="เล่น / หยุด"><i data-i="play"></i></button>
+        <button class="ibtn" id="btnFwd" data-tip="เดินหน้า 0.1 วิ" aria-label="เดินหน้า 0.1 วินาที"><i data-i="fwd"></i></button>
+        <div class="tc" id="timeLbl">0:00.0 <span>/ 0:00.0</span></div>
+      </div>
+    </div>
 
-      <div class="stack">
-        <section class="card">
-          <h2><span class="n">3</span>ปรับกล้อง</h2>
-          <div id="pvBox"><canvas id="pv" width="540" height="960"></canvas></div>
-          <div class="set">
-            <label><span class="lab">ขนาดคนในเฟรม <b id="vSubject"></b></span><input type="range" id="sSubject" min="40" max="95" step="1"></label>
-            <label><span class="lab">ความนุ่มของกล้อง <b id="vSmooth"></b></span><input type="range" id="sSmooth" min="0.1" max="2" step="0.05"></label>
-            <label><span class="lab">กล้องสั่นแบบถือมือ <b id="vShake"></b></span><input type="range" id="sShake" min="0" max="10" step="1"></label>
-            <label><span class="lab">ซูมสูงสุด (ครอปเล็กสุด % ของความสูงต้นฉบับ) <b id="vMinCrop"></b></span><input type="range" id="sMinCrop" min="15" max="100" step="1"></label>
-            <div><div class="lab small" style="margin-bottom:4px">สัดส่วน</div>
-              <div class="seg" id="segAspect"><button data-v="9:16">9:16</button><button data-v="4:5">4:5</button><button data-v="1:1">1:1</button></div></div>
-            <div><div class="lab small" style="margin-bottom:4px">ความละเอียด</div>
-              <div class="seg" id="segRes"><button data-v="1080">1080p</button><button data-v="720">720p</button></div></div>
-          </div>
-        </section>
+    <!-- right: camera + export -->
+    <aside class="right">
+      <section class="panel sec" data-tab="cam">
+        <h3><span class="grow">กล้อง</span><span class="count">เส้นทางทั้งคลิป</span></h3>
+        <div class="graph"><canvas id="graph"></canvas>
+          <div class="glegend"><span><i style="background:var(--accent)"></i>ตำแหน่งซ้าย–ขวา</span><span><i style="background:var(--pink)"></i>ซูม</span></div>
+        </div>
+        <div class="set">
+          <label><span class="lab">ขนาดคนในเฟรม <b id="vSubject"></b></span><input type="range" id="sSubject" min="40" max="95" step="1"></label>
+          <label><span class="lab">ความนุ่มของกล้อง <b id="vSmooth"></b></span><input type="range" id="sSmooth" min="0.1" max="2" step="0.05"></label>
+          <label><span class="lab">กล้องสั่นแบบถือมือ <b id="vShake"></b></span><input type="range" id="sShake" min="0" max="10" step="1"></label>
+          <label><span class="lab">ซูมสูงสุด (ครอปเล็กสุด) <b id="vMinCrop"></b></span><input type="range" id="sMinCrop" min="15" max="100" step="1"></label>
+          <div><div class="seglab">สัดส่วน</div><div class="seg" id="segAspect"><button data-v="9:16">9:16</button><button data-v="4:5">4:5</button><button data-v="1:1">1:1</button></div></div>
+          <div><div class="seglab">ความละเอียด</div><div class="seg" id="segRes"><button data-v="1080">1080p</button><button data-v="720">720p</button></div></div>
+        </div>
+      </section>
+      <section class="panel sec" data-tab="exp">
+        <h3>ส่งออกวิดีโอ</h3>
+        <p class="muted" id="expInfo" style="margin:0 0 12px"></p>
+        <div class="row">
+          <button class="btn primary block" id="btnExport"><i data-i="share" class="sm"></i>ส่งออกวิดีโอ</button>
+          <button class="btn block" id="btnExpCancel" hidden>ยกเลิก</button>
+        </div>
+        <div class="prog" style="margin-top:12px"><div id="expBar"></div></div>
+        <div class="status" id="expStatus"></div>
+        <div class="warnbox" id="expWarn" hidden>กำลังอัดแบบเวลาจริง: <b>เปิดหน้านี้ค้างไว้</b> อย่าสลับแอป/แท็บ หรือปิดหน้าจอ ไม่งั้นวิดีโอจะกระตุก</div>
+        <div id="result" hidden>
+          <video id="outVid" controls playsinline></video>
+          <div class="row" style="margin-top:10px"><a class="btn primary" id="dlLink" download="fancam.mp4"><i data-i="download" class="sm"></i>ดาวน์โหลด</a><span class="small" id="outInfo"></span></div>
+        </div>
+      </section>
+    </aside>
 
-        <section class="card">
-          <h2><span class="n">4</span>ส่งออกวิดีโอ</h2>
-          <p class="hint" id="expInfo"></p>
-          <div class="row" style="margin-top:0">
-            <button class="primary" id="btnExport">ส่งออกวิดีโอ</button>
-            <button id="btnExpCancel" hidden>ยกเลิก</button>
-          </div>
-          <div class="prog"><div id="expBar"></div></div>
-          <div class="status" id="expStatus"></div>
-          <div class="warnbox" id="expWarn" hidden>กำลังอัดแบบเวลาจริง: <b>เปิดแท็บนี้ค้างไว้</b> อย่าสลับแอป/แท็บ หรือปิดหน้าจอ ไม่งั้นวิดีโอจะกระตุก</div>
-          <div id="result" hidden>
-            <video id="outVid" controls playsinline></video>
-            <div class="row"><a class="btn primary" id="dlLink" download="fancam.mp4">ดาวน์โหลด</a><span class="small" id="outInfo" style="align-self:center"></span></div>
-          </div>
-        </section>
-        <button id="btnNewFile">เลือกวิดีโออื่น</button>
+    <!-- bottom: multi-track timeline -->
+    <div class="tlwrap">
+      <div class="timeline">
+        <div class="tl-heads">
+          <div class="tl-corner" id="tlCorner">0:00</div>
+          <div class="tl-head h-track"><i data-i="target" class="sm lbl-ic"></i><span class="nm">ติดตาม</span><button class="ibtn" id="btnBoxes2" aria-label="แสดงกรอบคน"><i data-i="eye" class="sm"></i></button></div>
+          <div class="tl-head h-thumb"><i data-i="film" class="sm lbl-ic"></i><span class="nm">วิดีโอ</span><button class="ibtn" id="btnCrop2" aria-label="แสดงกรอบกล้อง"><i data-i="crop" class="sm"></i></button></div>
+          <div class="tl-head h-wave"><i data-i="music" class="sm lbl-ic"></i><span class="nm">เสียง</span><button class="ibtn" id="btnMute" aria-label="ปิด/เปิดเสียง"><i data-i="vol" class="sm"></i></button></div>
+        </div>
+        <div class="tl-lanes" id="lanes">
+          <canvas id="ruler"></canvas>
+          <canvas id="laneTrack"></canvas>
+          <canvas id="laneThumbs"></canvas>
+          <canvas id="laneWave"></canvas>
+          <div id="playhead"></div>
+        </div>
       </div>
     </div>
   </main>
 </div>
 
+<nav class="tabbar" id="tabbar" hidden>
+  <button data-tab="ana" class="on"><i data-i="sparkles"></i>วิเคราะห์</button>
+  <button data-tab="anc"><i data-i="pin"></i>จุดยึด</button>
+  <button data-tab="cam"><i data-i="sliders"></i>กล้อง</button>
+  <button data-tab="exp"><i data-i="share"></i>ส่งออก</button>
+</nav>
+
 <div id="toast"></div>
-<div id="modal"><div class="box"><p id="modalText"></p><div class="row"><button id="modalCancel">ยกเลิก</button><button class="primary" id="modalOk">ตกลง</button></div></div></div>
+<div id="modal"><div class="box"><p id="modalText"></p><div class="row"><button class="btn ghost" id="modalCancel">ยกเลิก</button><button class="btn primary" id="modalOk">ตกลง</button></div></div></div>
 
 <script src="ort/ort.min.js"></script>
 <script>
@@ -203,7 +421,7 @@ const S = {
   session: null, ep: '',
   exporting: false,
 };
-const DEF = { subject: 80, smooth: 0.6, shake: 2, minCrop: 25, aspect: '9:16', res: 1080 };
+const DEF = { subject: 80, smooth: 0.6, shake: 2, minCrop: 25, aspect: '9:16', res: 1080, boxes: true, crop: true, muted: false };
 let SET = { ...DEF };
 try { Object.assign(SET, JSON.parse(localStorage.getItem('fancam.settings') || '{}')); } catch (e) {}
 const saveSet = () => { try { localStorage.setItem('fancam.settings', JSON.stringify(SET)); } catch (e) {} };
@@ -224,7 +442,7 @@ function ask(text, okLabel = 'ตกลง', cancel = true) {
 
 /* ---------------- Model ---------------- */
 async function loadModel() {
-  const badge = $('epBadge');
+  const badge = $('epText');
   try {
     ort.env.wasm.wasmPaths = new URL('ort/', location.href).href;
     ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 2) : 1;
@@ -247,9 +465,10 @@ async function loadModel() {
       } catch (e) { console.warn('EP failed', ep, e); }
     }
     if (!S.session) throw new Error('ไม่มี execution provider ที่ใช้ได้');
+    $('epBadge').classList.add('ok');
     badge.textContent = 'โมเดลพร้อม · ' + S.ep + (S.ep === 'wasm' ? ' ×' + ort.env.wasm.numThreads : '');
   } catch (e) {
-    console.error(e); badge.textContent = 'โหลดโมเดลไม่สำเร็จ'; badge.style.color = 'var(--bad)';
+    console.error(e); badge.textContent = 'โหลดโมเดลไม่สำเร็จ'; $('epBadge').classList.add('bad');
     toast('โหลดโมเดลไม่สำเร็จ: ' + e.message, 6000);
   }
   updateButtons();
@@ -363,6 +582,7 @@ async function analyze() {
       if (done % 5 === 0 || q === todo.length - 1) {
         const el = (performance.now() - t0) / 1000, eta = el / done * (todo.length - done);
         $('anaBar').style.width = (S.analyzed / S.N * 100).toFixed(1) + '%';
+        $('anaPct').textContent = Math.round(S.analyzed / S.N * 100) + '%';
         $('anaStatus').textContent = `วิเคราะห์แล้ว ${S.analyzed}/${S.N} เฟรม · เหลืออีกประมาณ ${fmtEta(eta)} · ${(el / done * 1000).toFixed(0)} ms/เฟรม`;
         drawTimeline();
       }
@@ -520,42 +740,97 @@ function drawCam(ctx, ow, oh, t, video) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
+/* ---------------- Icons ---------------- */
+const ICONS = {
+  logo: '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M10 8.5v7l6-3.5z" fill="currentColor"/>',
+  folder: '<path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l2 2h7.5A2.5 2.5 0 0 1 21 9.5v7a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5z"/>',
+  upload: '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 15v3.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V15"/>',
+  sparkles: '<path d="M11 3l1.9 5.1L18 10l-5.1 1.9L11 17l-1.9-5.1L4 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
+  play: '<path d="M8 5.2v13.6a1 1 0 0 0 1.5.86l11-6.8a1 1 0 0 0 0-1.72l-11-6.8A1 1 0 0 0 8 5.2z" fill="currentColor" stroke="none"/>',
+  pause: '<rect x="6" y="4.5" width="4.2" height="15" rx="1.2" fill="currentColor" stroke="none"/><rect x="13.8" y="4.5" width="4.2" height="15" rx="1.2" fill="currentColor" stroke="none"/>',
+  back: '<path d="M18 6.5 10 12l8 5.5z"/><path d="M6.5 6v12"/>',
+  fwd: '<path d="M6 6.5 14 12l-8 5.5z"/><path d="M17.5 6v12"/>',
+  skip: '<path d="M4 6.5 10 12l-6 5.5zM12 6.5 18 12l-6 5.5z"/><path d="M21 6v12"/>',
+  pin: '<path d="M12 21s-6.5-5.6-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.3"/>',
+  pinoff: '<path d="M12 21s-6.5-5.6-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21z"/><path d="M4 4l16 16"/>',
+  trash: '<path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l.9 12.2A2 2 0 0 0 9.4 21h5.2a2 2 0 0 0 2-1.8L17.5 7"/>',
+  eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
+  crop: '<path d="M6 2.5V16a2 2 0 0 0 2 2h13.5M2.5 6H16a2 2 0 0 1 2 2v13.5"/>',
+  vol: '<path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>',
+  mute: '<path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/>',
+  share: '<path d="M12 15V3.5M7.5 8 12 3.5 16.5 8"/><path d="M5 12.5v6A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5v-6"/>',
+  download: '<path d="M12 3.5V15M7.5 10.5 12 15l4.5-4.5M5 20.5h14"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+  moon: '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5z"/>',
+  target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>',
+  film: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7.5 4v16M16.5 4v16M3 9h4.5M3 15h4.5M16.5 9H21M16.5 15H21"/>',
+  music: '<path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
+  sliders: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+  x: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+};
+const icon = (n, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ''}</svg>`;
+function paintIcons(root = document) { root.querySelectorAll('i[data-i]').forEach(el => { el.outerHTML = icon(el.dataset.i, el.className); }); }
+paintIcons();
+
+/* ---------------- Theme ---------------- */
+let TK = {};
+function readTokens() {
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  TK = { accent: g('--accent'), accent2: g('--accent2'), soft: g('--accent-soft'), pink: g('--pink'), ok: g('--ok'), warn: g('--warn'),
+    line: g('--line'), mute: g('--mute'), mute2: g('--mute2'), text: g('--text'), s2: g('--surface2'), s3: g('--surface3'), surface: g('--surface') };
+}
+function isDark() { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; }
+function syncThemeBtn() { $('btnTheme').innerHTML = icon(isDark() ? 'sun' : 'moon'); }
+$('btnTheme').onclick = () => {
+  const t = isDark() ? 'light' : 'dark'; document.documentElement.dataset.theme = t;
+  try { localStorage.setItem('fancam.theme', t); } catch (e) {}
+  syncThemeBtn(); readTokens(); drawLanes(); redraw();
+};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { syncThemeBtn(); readTokens(); drawLanes(); redraw(); });
+readTokens(); syncThemeBtn();
+
 /* ---------------- Main video, overlay, preview ---------------- */
-const vid = $('vid'), ov = $('ov'), ovCtx = ov.getContext('2d'), pv = $('pv'), pvCtx = pv.getContext('2d'), tl = $('tl'), tlCtx = tl.getContext('2d');
+const vid = $('vid'), ov = $('ov'), ovCtx = ov.getContext('2d'), pv = $('pv'), pvCtx = pv.getContext('2d');
 const curIdx = () => clamp(Math.round(vid.currentTime * SFPS), 0, Math.max(0, S.N - 1));
+const mobile = () => matchMedia('(max-width:760px)').matches;
 
 function sizeCanvas(c) {
   const r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1, w = Math.max(1, Math.round(r.width * d)), h = Math.max(1, Math.round(r.height * d));
   if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+  return d;
 }
+function rrect(ctx, x, y, w, h, r) { r = Math.max(0, Math.min(r, w / 2, h / 2)); ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
 function drawOverlay() {
   if (!S.W) return;
-  sizeCanvas(ov);
-  const k = ov.width / S.W, d = window.devicePixelRatio || 1, i = curIdx();
+  const d = sizeCanvas(ov), k = ov.width / S.W, i = curIdx();
   ovCtx.clearRect(0, 0, ov.width, ov.height);
   const ds = S.dets[i] || [], tb = S.track[i], src = S.tsrc[i];
-  ovCtx.lineWidth = 1.5 * d;
-  for (const b of ds) { if (b === tb) continue; ovCtx.strokeStyle = 'rgba(200,205,220,.55)'; ovCtx.strokeRect(b.x * k, b.y * k, b.w * k, b.h * k); }
-  // virtual camera crop
-  if (S.path) {
+  if (SET.boxes !== false) {
+    ovCtx.lineWidth = 1.5 * d; ovCtx.strokeStyle = 'rgba(255,255,255,.5)';
+    for (const b of ds) { if (b === tb) continue; rrect(ovCtx, b.x * k, b.y * k, b.w * k, b.h * k, 6 * d); ovCtx.stroke(); }
+  }
+  if (S.path && SET.crop !== false) {
     const c = cropAt(vid.currentTime, aspectVal());
-    ovCtx.strokeStyle = 'rgba(255,79,139,.9)'; ovCtx.lineWidth = 2 * d; ovCtx.setLineDash([6 * d, 4 * d]);
-    ovCtx.strokeRect((c.cx - c.cw / 2) * k, (c.cy - c.ch / 2) * k, c.cw * k, c.ch * k); ovCtx.setLineDash([]);
+    ovCtx.save(); ovCtx.fillStyle = 'rgba(10,8,24,.38)'; ovCtx.beginPath(); ovCtx.rect(0, 0, ov.width, ov.height);
+    ovCtx.rect((c.cx - c.cw / 2) * k, (c.cy - c.ch / 2) * k, c.cw * k, c.ch * k); ovCtx.fill('evenodd'); ovCtx.restore();
+    ovCtx.strokeStyle = TK.accent2 || '#a597ff'; ovCtx.lineWidth = 2 * d; ovCtx.setLineDash([7 * d, 5 * d]);
+    rrect(ovCtx, (c.cx - c.cw / 2) * k, (c.cy - c.ch / 2) * k, c.cw * k, c.ch * k, 8 * d); ovCtx.stroke(); ovCtx.setLineDash([]);
   }
   if (tb) {
-    const anc = src === 2;
-    ovCtx.strokeStyle = anc ? '#ffffff' : '#35d07f'; ovCtx.lineWidth = 3 * d;
-    ovCtx.strokeRect(tb.x * k, tb.y * k, tb.w * k, tb.h * k);
-    label(anc ? 'จุดยึด' : 'ตามอยู่', tb.x * k, tb.y * k, anc ? '#ffffff' : '#35d07f');
+    const anc = src === 2, col = anc ? '#ffffff' : (TK.ok || '#33c48d');
+    ovCtx.strokeStyle = col; ovCtx.lineWidth = 3 * d; rrect(ovCtx, tb.x * k, tb.y * k, tb.w * k, tb.h * k, 8 * d); ovCtx.stroke();
+    label(anc ? 'จุดยึด' : 'ตามอยู่', tb.x * k, tb.y * k, col);
   } else if (S.path) {
     const c = camAt(vid.currentTime), hh = c.h * k, ww = hh * 0.4;
-    ovCtx.strokeStyle = '#f5b43c'; ovCtx.lineWidth = 2 * d; ovCtx.setLineDash([4 * d, 4 * d]);
-    ovCtx.strokeRect(c.cx * k - ww / 2, c.cy * k - hh / 2, ww, hh); ovCtx.setLineDash([]);
-    label('หลุด (เดา)', c.cx * k - ww / 2, c.cy * k - hh / 2, '#f5b43c');
+    ovCtx.strokeStyle = TK.warn || '#f2a93b'; ovCtx.lineWidth = 2 * d; ovCtx.setLineDash([4 * d, 4 * d]);
+    rrect(ovCtx, c.cx * k - ww / 2, c.cy * k - hh / 2, ww, hh, 8 * d); ovCtx.stroke(); ovCtx.setLineDash([]);
+    label('หลุด (เดา)', c.cx * k - ww / 2, c.cy * k - hh / 2, TK.warn || '#f2a93b');
   }
   function label(t, x, y, col) {
-    ovCtx.font = `600 ${12 * d}px system-ui,sans-serif`; const w = ovCtx.measureText(t).width + 10 * d, h = 18 * d;
-    y = Math.max(h, y); ovCtx.fillStyle = col; ovCtx.fillRect(x, y - h, w, h); ovCtx.fillStyle = '#000'; ovCtx.fillText(t, x + 5 * d, y - 5 * d);
+    ovCtx.font = `600 ${12 * d}px -apple-system,system-ui,sans-serif`;
+    const w = ovCtx.measureText(t).width + 14 * d, h = 20 * d; y = Math.max(h + 2 * d, y - 4 * d);
+    ovCtx.fillStyle = col; rrect(ovCtx, x, y - h, w, h, 10 * d); ovCtx.fill();
+    ovCtx.fillStyle = '#16131f'; ovCtx.fillText(t, x + 7 * d, y - 6 * d);
   }
 }
 function drawPreview() {
@@ -564,28 +839,179 @@ function drawPreview() {
   if (pv.width !== pw || pv.height !== ph) { pv.width = pw; pv.height = ph; }
   drawCam(pvCtx, pw, ph, vid.currentTime, vid);
 }
-function drawTimeline() {
-  if (!S.N) return;
-  sizeCanvas(tl);
-  const w = tl.width, h = tl.height, d = window.devicePixelRatio || 1, N = S.N, has = S.anchors.length > 0;
-  tlCtx.fillStyle = '#0b0c10'; tlCtx.fillRect(0, 0, w, h);
-  const bw = w / N, top = 6 * d, bh = h - 12 * d;
-  for (let i = 0; i < N; i++) {
-    let col;
-    if (!S.dets[i]) col = '#3a3f4d';
-    else if (!has) col = '#5a6075';
-    else col = (S.tsrc[i] === 1 || S.tsrc[i] === 2) ? '#35d07f' : '#f5b43c';
-    tlCtx.fillStyle = col; tlCtx.fillRect(Math.floor(i * bw), top, Math.ceil(bw), bh);
+// keep the phone preview as tall as the source video on wide screens
+function layoutStage() {
+  const h = $('vwrap').getBoundingClientRect().height;
+  if (h > 0 && !mobile()) document.documentElement.style.setProperty('--stageH', Math.round(h - 14) + 'px');
+  $('outLbl').textContent = SET.aspect;
+}
+
+/* ---------------- Timeline: ruler, tracking lane, thumbnails, waveform ---------------- */
+const lanes = $('lanes'), ruler = $('ruler'), laneTrack = $('laneTrack'), laneThumbs = $('laneThumbs'), laneWave = $('laneWave');
+const THUMBS = { list: [], vid: null, busy: false }, WAVE = { peaks: null, busy: false };
+function niceStep(pxPerSec) { for (const s of [1, 2, 5, 10, 15, 30, 60, 120, 300]) if (s * pxPerSec >= 70) return s; return 600; }
+const fmtShort = s => s < 60 ? s + 's' : Math.floor(s / 60) + ':' + String(Math.round(s % 60)).padStart(2, '0');
+function drawRuler() {
+  const d = sizeCanvas(ruler), c = ruler.getContext('2d'), w = ruler.width, h = ruler.height;
+  c.clearRect(0, 0, w, h); if (!S.dur) return;
+  const pps = w / d / S.dur, step = niceStep(pps), minor = step / 5;
+  c.fillStyle = TK.mute; c.strokeStyle = TK.mute; c.font = `${11 * d}px -apple-system,system-ui,sans-serif`; c.textBaseline = 'middle';
+  for (let t = 0; t <= S.dur + 1e-6; t += minor) {
+    const x = Math.round(t / S.dur * w) + 0.5, major = Math.abs(t / step - Math.round(t / step)) < 1e-6;
+    if (major) { c.fillText(fmtShort(Math.round(t)), x + 5 * d, h / 2); c.globalAlpha = .7; c.fillRect(x - .5 * d, h * .3, d, h * .4); c.globalAlpha = 1; }
+    else { c.globalAlpha = .45; c.beginPath(); c.arc(x, h / 2, 1.2 * d, 0, 7); c.fill(); c.globalAlpha = 1; }
   }
-  tlCtx.fillStyle = '#fff';
-  for (const a of S.anchors) tlCtx.fillRect(Math.round((a.idx + 0.5) * bw) - d, 0, 2 * d, h);
-  const x = (vid.currentTime / S.dur) * w;
-  tlCtx.fillStyle = '#ff4f8b'; tlCtx.fillRect(x - 1.5 * d, 0, 3 * d, h);
-  tlCtx.beginPath(); tlCtx.moveTo(x - 6 * d, 0); tlCtx.lineTo(x + 6 * d, 0); tlCtx.lineTo(x, 7 * d); tlCtx.fill();
+}
+function drawTrackLane() {
+  const d = sizeCanvas(laneTrack), c = laneTrack.getContext('2d'), w = laneTrack.width, h = laneTrack.height;
+  c.clearRect(0, 0, w, h); if (!S.N) return;
+  const N = S.N, has = S.anchors.length > 0, y = 11 * d, bh = h - 22 * d, bw = w / N;
+  c.fillStyle = TK.s3; rrect(c, 0, y, w, bh, bh / 2); c.fill();
+  c.save(); rrect(c, 0, y, w, bh, bh / 2); c.clip();
+  let i = 0;
+  while (i < N) {
+    const st = !S.dets[i] ? 0 : !has ? 1 : (S.tsrc[i] === 1 || S.tsrc[i] === 2) ? 2 : 3;
+    let e = i + 1; while (e < N) { const s2 = !S.dets[e] ? 0 : !has ? 1 : (S.tsrc[e] === 1 || S.tsrc[e] === 2) ? 2 : 3; if (s2 !== st) break; e++; }
+    if (st) {
+      c.fillStyle = st === 1 ? TK.accent2 : st === 2 ? TK.ok : TK.warn; c.globalAlpha = st === 1 ? .35 : .9;
+      rrect(c, i * bw + .5 * d, y, (e - i) * bw - d, bh, 4 * d); c.fill(); c.globalAlpha = 1;
+    }
+    i = e;
+  }
+  c.restore();
+  for (const a of S.anchors) {   // anchor diamonds
+    const x = (a.idx + .5) * bw, cy = h / 2, r = 6.5 * d;
+    c.fillStyle = TK.surface; c.strokeStyle = TK.accent; c.lineWidth = 2.5 * d;
+    c.beginPath(); c.moveTo(x, cy - r); c.lineTo(x + r, cy); c.lineTo(x, cy + r); c.lineTo(x - r, cy); c.closePath(); c.fill(); c.stroke();
+  }
+}
+function drawThumbLane() {
+  const d = sizeCanvas(laneThumbs), c = laneThumbs.getContext('2d'), w = laneThumbs.width, h = laneThumbs.height;
+  c.clearRect(0, 0, w, h); if (!S.dur) return;
+  const y = 7 * d, th = h - 14 * d, tw = th * S.W / S.H, n = Math.max(1, Math.ceil(w / tw));
+  c.save(); rrect(c, 0, y, w, th, 10 * d); c.clip();
+  c.fillStyle = TK.s3; c.fillRect(0, y, w, th);
+  const L = THUMBS.list;
+  if (L.length) for (let k = 0; k < n; k++) {
+    const t = (k * tw + tw / 2) / w * S.dur, j = clamp(Math.round(t / S.dur * (L.length - 1)), 0, L.length - 1);
+    if (L[j]) c.drawImage(L[j], k * tw, y, tw, th);
+  }
+  c.restore();
+  c.strokeStyle = 'rgba(255,255,255,.18)'; c.lineWidth = d; rrect(c, .5 * d, y + .5 * d, w - d, th - d, 10 * d); c.stroke();
+}
+function drawWaveLane() {
+  const d = sizeCanvas(laneWave), c = laneWave.getContext('2d'), w = laneWave.width, h = laneWave.height;
+  c.clearRect(0, 0, w, h); if (!S.dur) return;
+  const y = 7 * d, bh = h - 14 * d;
+  const g = c.createLinearGradient(0, 0, w, 0); g.addColorStop(0, TK.accent); g.addColorStop(1, TK.pink);
+  c.globalAlpha = isDark() ? .55 : .75; c.fillStyle = g; rrect(c, 0, y, w, bh, 12 * d); c.fill(); c.globalAlpha = 1;
+  const P = WAVE.peaks;
+  if (P) {
+    c.fillStyle = 'rgba(255,255,255,.9)'; const step = 3 * d, mid = y + bh / 2;
+    for (let x = 0; x < w; x += step) {
+      const a = Math.floor(x / w * P.length), b = Math.max(a + 1, Math.floor((x + step) / w * P.length)); let m = 0;
+      for (let k = a; k < b && k < P.length; k++) m = Math.max(m, P[k]);
+      const hh = Math.max(1 * d, m * (bh * .42)); c.fillRect(x, mid - hh, 1.6 * d, hh * 2);
+    }
+  } else {
+    c.fillStyle = 'rgba(255,255,255,.85)'; c.font = `500 ${12 * d}px -apple-system,system-ui,sans-serif`; c.textBaseline = 'middle';
+    c.fillText(WAVE.busy ? 'กำลังอ่านเสียง…' : 'เสียงต้นฉบับ', 14 * d, y + bh / 2);
+  }
+}
+function drawLanes() { drawRuler(); drawTrackLane(); drawThumbLane(); drawWaveLane(); drawPlayhead(); }
+function drawPlayhead() {
+  if (!S.dur) return;
+  $('playhead').style.left = (vid.currentTime / S.dur * 100) + '%';
+  $('tlCorner').textContent = fmt(vid.currentTime);
+}
+// called by analysis / export / recompute
+function drawTimeline() { drawTrackLane(); drawPlayhead(); }
+
+async function makeThumbs() {
+  if (THUMBS.busy || !S.url) return;
+  const url = S.url; THUMBS.busy = true; THUMBS.list = [];
+  const v = THUMBS.vid || (THUMBS.vid = Object.assign(document.createElement('video'), { muted: true, playsInline: true, preload: 'auto' }));
+  v.style.cssText = 'position:fixed;left:0;top:0;width:4px;height:4px;opacity:.01;pointer-events:none;z-index:-1'; document.body.appendChild(v);
+  v.src = url;
+  try {
+    await new Promise((r, j) => { v.onloadeddata = r; v.onerror = j; });
+    const n = clamp(Math.round(S.dur / 2.5), 12, 48), th = 96, tw = Math.round(th * S.W / S.H);
+    for (let k = 0; k < n; k++) {
+      if (S.url !== url) break;
+      await seekTo(v, Math.min(S.dur - 0.05, (k + .5) / n * S.dur));
+      const cv = document.createElement('canvas'); cv.width = tw; cv.height = th; cv.getContext('2d').drawImage(v, 0, 0, tw, th);
+      THUMBS.list[k] = cv;
+      if (k === 0) drawFileThumb(cv);
+      if (k % 6 === 5 || k === n - 1) drawThumbLane();
+    }
+  } catch (e) { console.warn('thumbs', e); }
+  v.removeAttribute('src'); v.load(); THUMBS.busy = false;
+}
+function drawFileThumb(src) {
+  const c = $('fileThumb'), x = c.getContext('2d'), s = Math.min(src.width, src.height);
+  x.drawImage(src, (src.width - s) / 2, (src.height - s) / 2, s, s, 0, 0, c.width, c.height);
+}
+async function makeWave() {
+  if (WAVE.busy || !S.url) return;
+  const url = S.url; WAVE.busy = true; WAVE.peaks = null; drawWaveLane();
+  try {
+    const buf = await (await fetch(url)).arrayBuffer();
+    if (buf.byteLength > 400 * 1048576) throw new Error('file too large for waveform');
+    const ctx = new OfflineAudioContext(1, 8000, 8000);
+    const ab = await ctx.decodeAudioData(buf);
+    if (S.url !== url) return;
+    const ch = ab.getChannelData(0), n = 1600, per = Math.max(1, Math.floor(ch.length / n)), P = new Float32Array(n); let mx = 1e-6;
+    for (let i = 0; i < n; i++) { let m = 0; const a = i * per; for (let k = 0; k < per; k += 4) { const v = Math.abs(ch[a + k] || 0); if (v > m) m = v; } P[i] = m; if (m > mx) mx = m; }
+    for (let i = 0; i < n; i++) P[i] = Math.pow(P[i] / mx, 0.7);
+    WAVE.peaks = P;
+  } catch (e) { console.warn('waveform', e); }
+  WAVE.busy = false; drawWaveLane();
+}
+
+let tlDrag = false;
+function tlSeek(e) { const r = lanes.getBoundingClientRect(); vid.currentTime = clamp((e.clientX - r.left) / r.width, 0, 1) * S.dur; drawPlayhead(); }
+lanes.addEventListener('pointerdown', e => { if (S.exporting || !S.dur) return; tlDrag = true; lanes.setPointerCapture(e.pointerId); vid.pause(); tlSeek(e); });
+lanes.addEventListener('pointermove', e => { if (tlDrag) tlSeek(e); });
+lanes.addEventListener('pointerup', () => tlDrag = false);
+lanes.addEventListener('pointercancel', () => tlDrag = false);
+
+/* ---------------- Camera path graph (speed-curve style) ---------------- */
+const graph = $('graph');
+function drawGraph() {
+  const d = sizeCanvas(graph), c = graph.getContext('2d'), w = graph.width, h = graph.height;
+  c.clearRect(0, 0, w, h);
+  const pad = 8 * d, gx = pad, gy = pad, gw = w - 2 * pad, gh = h - 2 * pad;
+  c.strokeStyle = TK.line; c.lineWidth = d;
+  for (let k = 0; k <= 4; k++) { const y = Math.round(gy + gh * k / 4) + .5; c.beginPath(); c.moveTo(gx, y); c.lineTo(gx + gw, y); c.stroke(); }
+  if (!S.path || !S.dur) {
+    c.fillStyle = TK.mute; c.font = `${12 * d}px -apple-system,system-ui,sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText('แตะเลือกคนเพื่อดูเส้นทางกล้อง', w / 2, h / 2); c.textAlign = 'start'; return;
+  }
+  const P = S.path, N = S.N, X = i => gx + i / (N - 1) * gw;
+  const asp = aspectVal(), minH = S.H * SET.minCrop / 100;
+  const zoomY = i => { const ch = clamp(P.h[i] / (SET.subject / 100), minH, S.H); return gy + gh * (1 - (S.H - ch) / Math.max(1, S.H - minH)) ; };
+  const posY = i => { let cw = clamp(P.h[i] / (SET.subject / 100), minH, S.H) * asp; cw = Math.min(cw, S.W); const cx = clamp(P.cx[i], cw / 2, S.W - cw / 2); return gy + gh * (1 - cx / S.W); };
+  const line = (fy, col, wdt) => { c.strokeStyle = col; c.lineWidth = wdt * d; c.lineJoin = 'round'; c.beginPath(); const st = Math.max(1, Math.floor(N / gw * 1.5)); for (let i = 0; i < N; i += st) { const x = X(i), y = fy(i); i ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); };
+  line(zoomY, TK.pink, 2);
+  const g = c.createLinearGradient(0, 0, w, 0); g.addColorStop(0, TK.accent); g.addColorStop(1, TK.accent2);
+  line(posY, g, 2.6);
+  for (const a of S.anchors) { const x = X(a.idx), y = posY(a.idx); c.fillStyle = TK.accent; c.beginPath(); c.arc(x, y, 4.5 * d, 0, 7); c.fill(); }
+  const fi = clamp(vid.currentTime * SFPS, 0, N - 1), px = X(fi);
+  c.strokeStyle = TK.text; c.globalAlpha = .55; c.lineWidth = 1.5 * d; c.beginPath(); c.moveTo(px, gy); c.lineTo(px, gy + gh); c.stroke(); c.globalAlpha = 1;
+  const py = posY(Math.round(fi)); c.fillStyle = '#fff'; c.strokeStyle = TK.accent; c.lineWidth = 2 * d; c.beginPath(); c.arc(px, py, 5 * d, 0, 7); c.fill(); c.stroke();
+}
+
+/* ---------------- Per-frame UI ---------------- */
+function updateState() {
+  const el = $('stateChip'), i = curIdx(), s = S.tsrc[i];
+  const [txt, col] = !S.anchors.length ? ['ยังไม่เลือกคน', TK.mute] : s === 2 ? ['จุดยึด', TK.accent] : s === 1 ? ['ตามอยู่', TK.ok] : ['หลุด (เดา)', TK.warn];
+  el.querySelector('i').style.background = col; el.querySelector('span').textContent = txt;
+  $('stageHint').hidden = !(S.W && !S.anchors.length && vid.paused);
+  document.querySelectorAll('.aitem').forEach(a => a.classList.toggle('cur', Math.abs(+a.dataset.idx - i) <= 2));
 }
 function redraw() {
-  drawOverlay(); drawPreview(); drawTimeline();
-  $('timeLbl').textContent = fmt(vid.currentTime) + ' / ' + fmt(S.dur);
+  drawOverlay(); drawPreview(); drawPlayhead(); drawGraph(); updateState();
+  $('timeLbl').innerHTML = fmt(vid.currentTime) + ' <span>/ ' + fmt(S.dur) + '</span>';
 }
 // render loop driven by the video's own frames when playing
 const hasRVFC = 'requestVideoFrameCallback' in HTMLVideoElement.prototype;
@@ -593,11 +1019,12 @@ function frameLoop() {
   if (!S.exporting) redraw();
   if (!vid.paused && !vid.ended) hasRVFC ? vid.requestVideoFrameCallback(frameLoop) : requestAnimationFrame(frameLoop);
 }
-vid.addEventListener('play', () => { $('btnPlay').textContent = '❚❚'; hasRVFC ? vid.requestVideoFrameCallback(frameLoop) : requestAnimationFrame(frameLoop); });
-vid.addEventListener('pause', () => { $('btnPlay').textContent = '▶︎'; redraw(); });
+vid.addEventListener('play', () => { $('btnPlay').innerHTML = icon('pause'); hasRVFC ? vid.requestVideoFrameCallback(frameLoop) : requestAnimationFrame(frameLoop); });
+vid.addEventListener('pause', () => { $('btnPlay').innerHTML = icon('play'); redraw(); });
 vid.addEventListener('seeked', redraw);
-vid.addEventListener('loadeddata', redraw);
-window.addEventListener('resize', redraw);
+vid.addEventListener('loadeddata', () => { layoutStage(); redraw(); });
+let resizeT;
+window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { layoutStage(); drawLanes(); redraw(); }, 60); });
 
 /* ---------------- Audio graph (shared by playback & export) ---------------- */
 let AC = null, aSrc, aGain, aDest;
@@ -607,8 +1034,10 @@ function ensureAudio() {
     AC = new (window.AudioContext || window.webkitAudioContext)();
     aSrc = AC.createMediaElementSource(vid); aGain = AC.createGain(); aDest = AC.createMediaStreamDestination();
     aSrc.connect(aGain); aGain.connect(AC.destination); aSrc.connect(aDest);
+    applyMute();
   } catch (e) { console.warn('audio graph', e); AC = null; }
 }
+function applyMute() { if (aGain) aGain.gain.value = SET.muted ? 0 : 1; else vid.muted = !!SET.muted; $('btnMute').innerHTML = icon(SET.muted ? 'mute' : 'vol', 'sm'); $('btnMute').classList.toggle('on', !!SET.muted); }
 
 /* ---------------- Picking / anchors ---------------- */
 function pointToSrc(e) { const r = ov.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * S.W, y: (e.clientY - r.top) / r.height * S.H }; }
@@ -632,8 +1061,8 @@ ov.addEventListener('click', e => {
   }
   S.anchors = S.anchors.filter(a => a.idx !== i); S.anchors.push(anc);
   saveAnchors(); recompute();
-  toast(best ? `ตั้งจุดยึดที่ ${fmt(i / SFPS)} แล้ว` : `ตั้งจุดยึดแบบกำหนดเองที่ ${fmt(i / SFPS)} (ไม่พบกรอบคนตรงนั้น)`);
   if (!S.analyzing && S.analyzed < S.N && S.session) toast('ตั้งจุดยึดแล้ว · กด "วิเคราะห์วิดีโอ" เพื่อให้กล้องตามทั้งคลิป', 3500);
+  else toast(best ? `ตั้งจุดยึดที่ ${fmt(i / SFPS)} แล้ว` : `ตั้งจุดยึดแบบกำหนดเองที่ ${fmt(i / SFPS)} (ไม่พบกรอบคนตรงนั้น)`);
 });
 function removeAnchorNear(t) {
   if (!S.anchors.length) return toast('ยังไม่มีจุดยึด');
@@ -644,14 +1073,17 @@ function removeAnchorNear(t) {
 }
 function renderAnchorList() {
   const el = $('anchorList'); el.innerHTML = '';
+  $('ancCount').textContent = S.anchors.length ? S.anchors.length + ' จุด' : '';
+  if (!S.anchors.length) { el.innerHTML = '<div class="empty">ยังไม่มีจุดยึด แตะที่คนในวิดีโอเพื่อเริ่มตาม</div>'; return; }
   [...S.anchors].sort((a, b) => a.idx - b.idx).forEach(a => {
-    const c = document.createElement('span'); c.className = 'chip' + (a.manual ? ' manual' : '');
-    const go = document.createElement('button'); go.textContent = fmt(a.idx / SFPS); go.style.color = 'var(--text)'; go.style.padding = '2px 2px';
-    go.onclick = () => { vid.pause(); vid.currentTime = a.idx / SFPS; };
-    const x = document.createElement('button'); x.textContent = '✕'; x.title = 'ลบจุดยึดนี้';
-    x.onclick = () => { S.anchors = S.anchors.filter(b => b !== a); saveAnchors(); recompute(); };
-    c.append(go, x); el.append(c);
+    const it = document.createElement('div'); it.className = 'aitem'; it.dataset.idx = a.idx;
+    it.innerHTML = icon('pin', 'sm') + `<span class="t">${fmt(a.idx / SFPS)}</span><span class="tag">${a.manual ? 'กำหนดเอง' : 'กรอบคน'}</span>`;
+    const x = document.createElement('button'); x.className = 'x'; x.title = 'ลบจุดยึดนี้'; x.innerHTML = icon('x', 'sm');
+    x.onclick = ev => { ev.stopPropagation(); S.anchors = S.anchors.filter(b => b !== a); saveAnchors(); recompute(); };
+    it.onclick = () => { vid.pause(); vid.currentTime = a.idx / SFPS; };
+    it.append(x); el.append(it);
   });
+  updateState();
 }
 function nextLost() {
   if (!S.anchors.length) return toast('เลือกคนที่จะตามก่อน');
@@ -665,14 +1097,6 @@ function nextLost() {
   toast('ไม่มีช่วงที่หลุดหลังจากนี้แล้ว 🎉');
 }
 
-/* ---------------- Timeline seek ---------------- */
-let tlDrag = false;
-function tlSeek(e) { const r = tl.getBoundingClientRect(); vid.currentTime = clamp((e.clientX - r.left) / r.width, 0, 1) * S.dur; drawTimeline(); }
-tl.addEventListener('pointerdown', e => { if (S.exporting) return; tlDrag = true; tl.setPointerCapture(e.pointerId); vid.pause(); tlSeek(e); });
-tl.addEventListener('pointermove', e => { if (tlDrag) tlSeek(e); });
-tl.addEventListener('pointerup', () => tlDrag = false);
-tl.addEventListener('pointercancel', () => tlDrag = false);
-
 /* ---------------- Buttons ---------------- */
 function togglePlay() { if (S.exporting) return; ensureAudio(); vid.paused ? vid.play() : vid.pause(); }
 function step(dt) { vid.pause(); vid.currentTime = clamp(vid.currentTime + dt, 0, S.dur); }
@@ -681,12 +1105,32 @@ $('btnBack').onclick = () => step(-1 / SFPS);
 $('btnFwd').onclick = () => step(1 / SFPS);
 $('btnNextLost').onclick = nextLost;
 $('btnDelAnchor').onclick = () => removeAnchorNear(vid.currentTime);
-$('btnClearAnchors').onclick = async () => { if (!S.anchors.length) return; if (await ask('ลบจุดยึดทั้งหมด ' + S.anchors.length + ' จุด?', 'ลบทั้งหมด')) { S.anchors = []; saveAnchors(); recompute(); } };
+$('btnClearAnchors').onclick = async () => { if (!S.anchors.length) return toast('ยังไม่มีจุดยึด'); if (await ask('ลบจุดยึดทั้งหมด ' + S.anchors.length + ' จุด?', 'ลบทั้งหมด')) { S.anchors = []; saveAnchors(); recompute(); } };
 $('btnAna').onclick = analyze;
 $('btnAnaCancel').onclick = () => { S.cancelAna = true; };
 $('btnExport').onclick = exportVideo;
 $('btnExpCancel').onclick = () => { expCancel = true; vid.pause(); };
 $('btnNewFile').onclick = () => $('file').click();
+function toggleSet(key) { SET[key] = SET[key] === false; saveSet(); syncToggles(); redraw(); }
+function syncToggles() {
+  for (const [k, ids] of [['boxes', ['btnBoxes', 'btnBoxes2']], ['crop', ['btnCrop', 'btnCrop2']]]) ids.forEach(id => $(id).classList.toggle('on', SET[k] !== false));
+}
+$('btnBoxes').onclick = $('btnBoxes2').onclick = () => toggleSet('boxes');
+$('btnCrop').onclick = $('btnCrop2').onclick = () => toggleSet('crop');
+$('btnMute').onclick = () => { SET.muted = !SET.muted; saveSet(); applyMute(); };
+syncToggles(); applyMute();
+// phone: source / result switch and bottom tabs
+$('viewSwitch').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  $('viewSwitch').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  $('stage').classList.toggle('out', b.dataset.v === 'out'); redraw();
+});
+$('tabbar').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  document.body.dataset.tab = b.dataset.tab;
+  $('tabbar').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  requestAnimationFrame(() => { drawGraph(); });
+});
 document.addEventListener('keydown', e => {
   if (!S.W || e.target.tagName === 'INPUT' && e.target.type !== 'range' || $('modal').classList.contains('show')) return;
   if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
@@ -698,21 +1142,23 @@ document.addEventListener('keydown', e => {
 function updateButtons() {
   const ana = S.analyzing, exp = S.exporting;
   $('btnAna').disabled = ana || exp || !S.session || !S.W || S.analyzed >= S.N;
-  $('btnAna').textContent = !S.session ? 'รอโมเดล…' : S.analyzed >= S.N && S.N ? 'วิเคราะห์เสร็จแล้ว ✓' : S.analyzed ? 'วิเคราะห์ต่อ' : 'วิเคราะห์วิดีโอ';
+  $('btnAna').querySelector('span').textContent = !S.session ? 'รอโมเดล…' : ana ? 'กำลังวิเคราะห์…' : S.analyzed >= S.N && S.N ? 'วิเคราะห์เสร็จแล้ว' : S.analyzed ? 'วิเคราะห์ต่อ' : 'วิเคราะห์วิดีโอ';
   $('btnAnaCancel').hidden = !ana;
+  $('anaPct').textContent = S.N ? Math.round(S.analyzed / S.N * 100) + '%' : '';
   $('btnExport').disabled = ana || exp || !S.path;
   $('btnExpCancel').hidden = !exp;
   $('btnNewFile').disabled = ana || exp;
   const [ow, oh] = outSize();
-  $('expInfo').textContent = `${ow}×${oh} · ความยาว ${fmt(S.dur)} · อัดแบบเวลาจริง (ใช้เวลาเท่าความยาวคลิป) มีเสียงต้นฉบับ`;
+  $('expInfo').textContent = `${ow}×${oh} · ยาว ${fmt(S.dur)} · อัดแบบเวลาจริง (ใช้เวลาเท่าความยาวคลิป) พร้อมเสียงต้นฉบับ`;
 }
 
 /* ---------------- Settings ---------------- */
+function rangeFill(el) { el.style.setProperty('--p', ((el.value - el.min) / (el.max - el.min) * 100) + '%'); }
 function bindRange(id, key, show) {
   const el = $(id), lab = $(id.replace('s', 'v'));
-  el.value = SET[key]; lab.textContent = show(SET[key]);
+  el.value = SET[key]; lab.textContent = show(SET[key]); rangeFill(el);
   el.addEventListener('input', () => {
-    SET[key] = +el.value; lab.textContent = show(SET[key]); saveSet();
+    SET[key] = +el.value; lab.textContent = show(SET[key]); rangeFill(el); saveSet();
     if (key === 'smooth') { if (S.anchors.length) buildPath(); }
     redraw();
   });
@@ -723,7 +1169,7 @@ bindRange('sShake', 'shake', v => v ? String(v) : 'ปิด');
 bindRange('sMinCrop', 'minCrop', v => v + '%');
 function bindSeg(id, key) {
   const el = $(id), sync = () => el.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v == SET[key]));
-  el.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || S.exporting) return; SET[key] = key === 'res' ? +b.dataset.v : b.dataset.v; saveSet(); sync(); updateButtons(); redraw(); });
+  el.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || S.exporting) return; SET[key] = key === 'res' ? +b.dataset.v : b.dataset.v; saveSet(); sync(); updateButtons(); layoutStage(); redraw(); });
   sync();
 }
 bindSeg('segAspect', 'aspect'); bindSeg('segRes', 'res');
@@ -742,6 +1188,7 @@ async function openFile(blobOrUrl, name, size) {
   if (S.url && S.url.startsWith('blob:')) URL.revokeObjectURL(S.url);
   const url = typeof blobOrUrl === 'string' ? blobOrUrl : URL.createObjectURL(blobOrUrl);
   Object.assign(S, { url, key: name + '|' + size, dets: [], analyzed: 0, anchors: [], track: [], tsrc: new Uint8Array(0), path: null, W: 0 });
+  THUMBS.list = []; WAVE.peaks = null;
   vid.src = url;
   try {
     await new Promise((res, rej) => { vid.onloadedmetadata = res; vid.onerror = () => rej(new Error('เบราว์เซอร์เปิดวิดีโอนี้ไม่ได้')); });
@@ -749,18 +1196,23 @@ async function openFile(blobOrUrl, name, size) {
   S.W = vid.videoWidth; S.H = vid.videoHeight; S.dur = vid.duration; S.N = Math.floor(S.dur * SFPS) + 1;
   S.tsrc = new Uint8Array(S.N); S.track = new Array(S.N).fill(null);
   $('vwrap').style.aspectRatio = S.W + ' / ' + S.H;
-  $('pick').hidden = true; $('work').hidden = false; $('result').hidden = true; $('expBar').style.width = '0'; $('expStatus').textContent = '';
+  $('pick').hidden = true; $('work').hidden = false; $('toolbar').hidden = false; $('tabbar').hidden = false;
+  $('result').hidden = true; $('expBar').style.width = '0'; $('expStatus').textContent = '';
   $('anaBar').style.width = '0';
-  $('anaStatus').textContent = `${name} · ${S.W}×${S.H} · ${fmt(S.dur)} · ต้องวิเคราะห์ ${S.N} เฟรม`;
+  $('fileName').textContent = name.split('/').pop();
+  $('fileMeta').textContent = `${S.W}×${S.H} · ${fmt(S.dur)}` + (typeof size === 'number' ? ` · ${(size / 1048576).toFixed(1)} MB` : '');
+  $('anaStatus').textContent = `ตรวจหาคนทุก 0.1 วินาที (${S.N} เฟรม) ประมวลผลในเครื่อง ไม่อัปโหลดไฟล์`;
   if (S.H > S.W) toast('วิดีโอนี้เป็นแนวตั้งอยู่แล้ว ใช้ได้ แต่จะได้ผลดีกับวิดีโอแนวนอน', 4000);
   const cached = await idbGet('det2:' + S.key);
   if (cached && cached.N === S.N) {
     S.dets = cached.dets; S.analyzed = S.N; $('anaBar').style.width = '100%';
-    $('anaStatus').textContent = 'ใช้ผลวิเคราะห์ที่เคยทำไว้ของไฟล์นี้ ✓';
+    $('anaStatus').textContent = 'ใช้ผลวิเคราะห์ที่เคยทำไว้ของไฟล์นี้';
+    if (mobile()) { document.body.dataset.tab = 'anc'; $('tabbar').querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.tab === 'anc')); }
   }
   const anc = await idbGet('anc:' + S.key);
   if (anc && anc.length) { S.anchors = anc.filter(a => a.idx < S.N); toast('โหลดจุดยึดเดิม ' + S.anchors.length + ' จุด'); }
-  recompute(); updateButtons(); redraw();
+  requestAnimationFrame(() => { layoutStage(); recompute(); drawLanes(); updateButtons(); redraw(); });
+  makeThumbs(); makeWave();
 }
 
 /* ---------------- Export ---------------- */
@@ -804,7 +1256,7 @@ async function exportVideo() {
       const p = vid.currentTime / S.dur;
       $('expBar').style.width = (p * 100).toFixed(1) + '%';
       $('expStatus').textContent = `กำลังอัด ${fmt(vid.currentTime)} / ${fmt(S.dur)} (${Math.round(p * 100)}%)`;
-      $('timeLbl').textContent = fmt(vid.currentTime) + ' / ' + fmt(S.dur);
+      $('timeLbl').innerHTML = fmt(vid.currentTime) + ' <span>/ ' + fmt(S.dur) + '</span>';
     }
   };
   const loop = () => { drawFrame(); if (!vid.paused && !vid.ended) hasRVFC ? vid.requestVideoFrameCallback(loop) : requestAnimationFrame(loop); };
@@ -819,7 +1271,7 @@ async function exportVideo() {
   await new Promise(r => setTimeout(r, 250));
   rec.stop(); await stopped;
   stream.getVideoTracks().forEach(t => t.stop());
-  if (aGain) aGain.gain.value = 1;
+  applyMute();
   S.exporting = false; $('expWarn').hidden = true; updateButtons();
   const realDur = (performance.now() - t0) / 1000;
   if (expCancel || vid.currentTime < S.dur - 0.5) { $('expStatus').textContent = 'ยกเลิกการส่งออกแล้ว'; $('expBar').style.width = '0'; return; }
@@ -855,3 +1307,4 @@ if (params.get('src')) modelReady.then(() => openFile(params.get('src'), params.
 </script>
 </body>
 </html>
+
