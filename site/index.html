@@ -79,17 +79,36 @@ button{font:inherit;color:inherit}
 .btn.ghost{background:transparent;color:var(--mute2)}
 .btn.block{width:100%}
 
-/* ---------- landing ---------- */
-#pick{min-height:calc(100vh - 120px);display:grid;place-items:center}
-#drop{width:min(640px,100%);background:var(--surface);border-radius:28px;padding:56px 28px;text-align:center;cursor:pointer;box-shadow:var(--shadow);border:2px dashed transparent;transition:.2s}
-#drop:hover,#drop.over{border-color:var(--accent2);transform:translateY(-2px)}
-#drop .big-ic{width:72px;height:72px;margin:0 auto 18px;border-radius:22px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
-#drop .big-ic .i{width:34px;height:34px}
-#drop h2{margin:0 0 6px;font-size:22px}
-#drop p{margin:0 0 22px;color:var(--mute2)}
-.steps{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:22px}
-.steps span{font-size:12px;color:var(--mute2);background:var(--surface2);border-radius:999px;padding:5px 12px}
+/* ---------- landing: drop slot (also shown as an overlay while dragging in the editor) ---------- */
+:root{--land:#f7f6fb;--slot:#ebeaf2;--slotline:#ffffff}
+:root[data-theme="dark"]{--land:#0d0d11;--slot:#1c1c23;--slotline:#3a3a46}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--land:#0d0d11;--slot:#1c1c23;--slotline:#3a3a46}}
+#pick{position:fixed;inset:0;z-index:70;display:grid;place-items:center;background:var(--land);padding:24px}
+#pick.overlay{background:color-mix(in srgb,var(--land) 78%,transparent);backdrop-filter:blur(10px)}
+#pick .brand{position:absolute;left:20px;top:16px}
+.landing{display:grid;justify-items:center;text-align:center;max-width:520px}
+#slot{width:168px;height:222px;border-radius:28px;background:var(--slot);position:relative;overflow:hidden;cursor:pointer;
+  transition:transform .32s cubic-bezier(.3,1.5,.5,1),background .2s,box-shadow .2s;outline:none}
+#slot::before,#slot::after{content:"";position:absolute;left:50%;top:50%;background:var(--slotline);border-radius:2px;transform:translate(-50%,-50%);transition:opacity .2s}
+#slot::before{width:64px;height:2px}#slot::after{width:2px;height:64px}
+#slot:hover,#slot:focus-visible{transform:scale(1.03)}
+#slot.hot{transform:scale(1.1);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}
+#slot.filled::before,#slot.filled::after{opacity:0}
+.landing h2{margin:26px 0 6px;font-size:21px}
+.landing p{margin:0 0 18px;color:var(--mute2)}
+.steps{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:20px}
+.steps span{font-size:12px;color:var(--mute2);background:var(--surface);border-radius:999px;padding:5px 12px}
 .steps b{color:var(--accent)}
+#pick.overlay .landing>*:not(#slot){opacity:0}
+/* the white file card (follows the pointer, then sinks into the slot) */
+.fcard{position:fixed;left:0;top:0;z-index:80;pointer-events:none;width:100px;padding:7px 7px 8px;background:#fff;border-radius:14px;
+  box-shadow:0 18px 40px rgba(40,30,90,.22),0 2px 6px rgba(40,30,90,.12);will-change:transform}
+.fcard canvas{display:block;width:86px;height:104px;border-radius:9px;background:linear-gradient(160deg,#f6b089,#a96fd6 60%,#5b4bd1)}
+.fcard span{display:block;font-size:10.5px;color:#3b3950;text-align:center;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#slot .fcard{position:absolute}
+.expand{position:fixed;z-index:75;background:linear-gradient(160deg,var(--bg2),var(--bg));pointer-events:none}
+.intro-content .panel>*,.intro-content .timeline>*{opacity:0}
+.intro-content.show-content .panel>*,.intro-content.show-content .timeline>*{opacity:1;transition:opacity .45s ease}
 
 /* ---------- editor grid ---------- */
 .work{display:grid;grid-template-columns:280px minmax(0,1fr) 320px;grid-template-rows:auto 1fr;grid-template-areas:"left stage right" "left tl right";gap:16px;align-items:start}
@@ -267,11 +286,12 @@ kbd{background:var(--surface2);border-radius:5px;padding:0 5px;font-size:11px;fo
   </header>
 
   <section id="pick">
-    <div id="drop" tabindex="0" role="button">
-      <div class="big-ic"><i data-i="upload"></i></div>
-      <h2>เลือกวิดีโอคอนเสิร์ต</h2>
-      <p>แตะเพื่อเลือกไฟล์ หรือลากวิดีโอแนวนอนมาวางตรงนี้ (MP4 / MOV / WebM)</p>
-      <span class="btn primary"><i data-i="folder" class="sm"></i>เลือกไฟล์</span>
+    <div class="brand"><span class="logo"><i data-i="logo"></i></span><div>Fancam Maker<small>แฟนแคมแนวตั้งจากวิดีโอคอนเสิร์ต</small></div></div>
+    <div class="landing">
+      <div id="slot" tabindex="0" role="button" aria-label="เลือกหรือวางไฟล์วิดีโอ"></div>
+      <h2>วางวิดีโอคอนเสิร์ตลงในช่อง</h2>
+      <p>ลากไฟล์มาวาง หรือแตะช่องเพื่อเลือก (MP4 / MOV / WebM)</p>
+      <button class="btn primary" id="btnPick"><i data-i="folder" class="sm"></i>เลือกไฟล์</button>
       <div class="steps"><span><b>1</b> วิเคราะห์</span><span><b>2</b> แตะคนที่จะตาม</span><span><b>3</b> ปรับกล้อง</span><span><b>4</b> ส่งออก 9:16</span></div>
       <div class="small" style="margin-top:14px">ประมวลผลในเครื่องทั้งหมด ไม่อัปโหลดวิดีโอ</div>
     </div>
@@ -320,7 +340,7 @@ kbd{background:var(--surface2);border-radius:5px;padding:0 5px;font-size:11px;fo
             <div class="hint" id="stageHint" hidden><i data-i="target" class="sm"></i><span>แตะที่คนที่ต้องการตาม</span></div>
           </div>
         </div>
-        <div class="phonebox">
+        <div class="phonebox" id="phonebox">
           <div class="phone"><canvas id="pv" width="540" height="960"></canvas></div>
           <div class="caption">ผลลัพธ์ <b id="outLbl">9:16</b></div>
         </div>
@@ -1110,7 +1130,7 @@ $('btnAna').onclick = analyze;
 $('btnAnaCancel').onclick = () => { S.cancelAna = true; };
 $('btnExport').onclick = exportVideo;
 $('btnExpCancel').onclick = () => { expCancel = true; vid.pause(); };
-$('btnNewFile').onclick = () => $('file').click();
+$('btnNewFile').onclick = () => { if (!busy()) $('file').click(); };
 function toggleSet(key) { SET[key] = SET[key] === false; saveSet(); syncToggles(); redraw(); }
 function syncToggles() {
   for (const [k, ids] of [['boxes', ['btnBoxes', 'btnBoxes2']], ['crop', ['btnCrop', 'btnCrop2']]]) ids.forEach(id => $(id).classList.toggle('on', SET[k] !== false));
@@ -1174,17 +1194,146 @@ function bindSeg(id, key) {
 }
 bindSeg('segAspect', 'aspect'); bindSeg('segRes', 'res');
 
-/* ---------------- File loading ---------------- */
-const drop = $('drop');
-drop.onclick = () => $('file').click();
-drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') $('file').click(); };
-$('file').onchange = e => { const f = e.target.files[0]; if (f) openFile(f, f.name, f.size); e.target.value = ''; };
-['dragenter', 'dragover'].forEach(t => document.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
-['dragleave', 'drop'].forEach(t => document.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
-document.addEventListener('drop', e => { const f = [...(e.dataTransfer?.files || [])].find(f => f.type.startsWith('video/') || /\.(mp4|mov|m4v|webm|mkv)$/i.test(f.name)); if (f && !S.analyzing && !S.exporting) openFile(f, f.name, f.size); });
+/* ---------------- File loading + drop animation ---------------- */
+const slot = $('slot'), pick = $('pick');
+const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const isVideoFile = f => f && (f.type.startsWith('video/') || /\.(mp4|mov|m4v|webm|mkv)$/i.test(f.name));
+const busy = () => S.analyzing || S.exporting || INTRO.running;
+const INTRO = { running: false, card: null, depth: 0, x: 0, y: 0, vx: 0, raf: 0 };
+slot.onclick = () => $('file').click();
+slot.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('file').click(); } };
+$('btnPick').onclick = () => $('file').click();
+$('file').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) dropFile(f, null); };
 
-async function openFile(blobOrUrl, name, size) {
-  if (S.analyzing || S.exporting) return;
+function makeCard(label) {
+  const c = document.createElement('div'); c.className = 'fcard';
+  c.innerHTML = '<canvas width="172" height="208"></canvas><span></span>'; c.querySelector('span').textContent = label;
+  return c;
+}
+// the card follows the pointer with a little lag and tilts in the direction it moves
+function cardLoop() {
+  const C = INTRO.card; if (!C || C.parentNode !== document.body) return;
+  const cur = C._p || { x: INTRO.x, y: INTRO.y, r: -6 };
+  const nx = cur.x + (INTRO.x - cur.x) * 0.35, ny = cur.y + (INTRO.y - cur.y) * 0.35;
+  const r = clamp(-6 + (INTRO.x - cur.x) * 0.25, -16, 8);
+  C._p = { x: nx, y: ny, r: cur.r + (r - cur.r) * 0.2 };
+  C.style.transform = `translate(${nx - 50}px,${ny - 70}px) rotate(${C._p.r}deg)`;
+  INTRO.raf = requestAnimationFrame(cardLoop);
+}
+function overSlot(x, y) { const r = slot.getBoundingClientRect(), m = 40; return x > r.left - m && x < r.right + m && y > r.top - m && y < r.bottom + m; }
+function startDrag(e) {
+  if (busy()) return;
+  if (!$('work').hidden) { pick.hidden = false; pick.classList.add('overlay'); }
+  if (!INTRO.card) { INTRO.card = makeCard('วิดีโอ'); document.body.appendChild(INTRO.card); INTRO.x = e.clientX; INTRO.y = e.clientY; cardLoop(); }
+}
+function endDrag() {
+  cancelAnimationFrame(INTRO.raf);
+  if (INTRO.card && INTRO.card.parentNode === document.body) INTRO.card.remove();
+  INTRO.card = null; INTRO.depth = 0; slot.classList.remove('hot');
+  if (!$('work').hidden && !INTRO.running) { pick.hidden = true; pick.classList.remove('overlay'); }
+}
+const hasFiles = e => [...(e.dataTransfer?.types || [])].includes('Files');
+document.addEventListener('dragenter', e => { if (!hasFiles(e)) return; e.preventDefault(); INTRO.depth++; startDrag(e); });
+document.addEventListener('dragover', e => {
+  if (!hasFiles(e)) return; e.preventDefault();
+  if (busy()) { e.dataTransfer.dropEffect = 'none'; return; }
+  INTRO.x = e.clientX; INTRO.y = e.clientY; slot.classList.toggle('hot', overSlot(e.clientX, e.clientY));
+});
+document.addEventListener('dragleave', e => { if (!hasFiles(e)) return; if (--INTRO.depth <= 0) endDrag(); });
+document.addEventListener('drop', e => {
+  if (!hasFiles(e)) return; e.preventDefault();
+  const f = [...(e.dataTransfer.files || [])].find(isVideoFile);
+  if (!f || busy()) { endDrag(); if (e.dataTransfer.files.length && !f) toast('ไฟล์นี้ไม่ใช่วิดีโอ'); return; }
+  const card = INTRO.card; cancelAnimationFrame(INTRO.raf); INTRO.card = null; INTRO.depth = 0;
+  dropFile(f, card);
+});
+
+// grab a representative frame for the card while it is flying
+function cardThumb(card, file) {
+  const v = document.createElement('video'), url = URL.createObjectURL(file);
+  v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = url;
+  v.onloadeddata = () => { v.currentTime = Math.min(1.5, (v.duration || 3) / 3); };
+  v.onseeked = () => {
+    const c = card.querySelector('canvas'), x = c.getContext('2d'), s = Math.min(v.videoWidth, v.videoHeight * c.width / c.height);
+    x.drawImage(v, (v.videoWidth - s) / 2, 0, s, s * c.height / c.width, 0, 0, c.width, c.height);
+    URL.revokeObjectURL(url); v.removeAttribute('src');
+  };
+}
+const ease = 'cubic-bezier(.2,.8,.2,1)';
+async function dropFile(file, card) {
+  if (busy()) return;
+  if (reduceMotion()) { endDrag(); const ok = await openFile(file, file.name, file.size); if (ok) showEditor(); return; }
+  INTRO.running = true;
+  const fromEditor = !$('work').hidden;
+  pick.hidden = false; if (fromEditor) pick.classList.add('overlay');
+  if (!card) {          // picked with the file dialog: the card drops in from above
+    card = makeCard(file.name); document.body.appendChild(card);
+    const r = slot.getBoundingClientRect(); card._p = { x: r.left + r.width / 2, y: r.top + r.height / 2 - 30, r: -6 };
+    card.style.transform = `translate(${card._p.x - 50}px,${card._p.y - 70}px) rotate(-6deg)`;
+    card.animate([{ opacity: 0, translate: '0 -60px', scale: .8 }, { opacity: 1, translate: '0 0', scale: 1 }], { duration: 380, easing: ease });
+    await sleep(380);
+  }
+  card.querySelector('span').textContent = file.name;
+  cardThumb(card, file);
+  const loading = openFile(file, file.name, file.size, { quiet: true });
+
+  // 1) snap upright over the slot, then 2) sink into it (clipped by the slot)
+  slot.classList.add('hot');
+  const sr = slot.getBoundingClientRect(), p = card._p || { x: sr.left + sr.width / 2, y: sr.top + sr.height / 2, r: 0 };
+  slot.appendChild(card);
+  const cx = sr.width / 2 - 50, cy = sr.height / 2 - 70;
+  card.style.transform = `translate(${p.x - sr.left - 50}px,${p.y - sr.top - 70}px) rotate(${p.r}deg)`;
+  await card.animate([{ transform: card.style.transform }, { transform: `translate(${cx}px,${cy}px) rotate(0deg)` }], { duration: 260, easing: ease, fill: 'forwards' }).finished;
+  await sleep(260);
+  slot.classList.remove('hot'); slot.classList.add('filled');
+  slot.animate([{ transform: 'scale(1.1)' }, { transform: 'scale(.95)', offset: .55 }, { transform: 'scale(1)' }], { duration: 520, easing: 'ease-out' });
+  await card.animate([{ transform: `translate(${cx}px,${cy}px)` }, { transform: `translate(${cx}px,${sr.height + 10}px)` }], { duration: 420, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' }).finished;
+  card.remove(); slot.classList.remove('filled');
+  await sleep(140);
+
+  // 3) the workspace colour grows out of the slot to fill the screen
+  const slotRect = slot.getBoundingClientRect();
+  const ex = document.createElement('div'); ex.className = 'expand'; document.body.appendChild(ex);
+  const W = innerWidth, H = innerHeight;
+  await ex.animate([
+    { left: slotRect.left + 'px', top: slotRect.top + 'px', width: slotRect.width + 'px', height: slotRect.height + 'px', borderRadius: '28px' },
+    { left: '0px', top: '0px', width: W + 'px', height: H + 'px', borderRadius: '0px' }
+  ], { duration: 560, easing: 'cubic-bezier(.75,0,.2,1)', fill: 'forwards' }).finished;
+
+  const ok = await loading;
+  pick.hidden = true; pick.classList.remove('overlay');
+  if (!ok) {             // could not open: back to where we were
+    if (!fromEditor) pick.hidden = false;
+    await ex.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 250, fill: 'forwards' }).finished; ex.remove(); INTRO.running = false; return;
+  }
+  // 4) panels fly into place, the video grows from the slot, then contents fade in
+  const work = $('work'); work.classList.add('intro-content');
+  showEditor();
+  const vw = $('vwrap'), vr = vw.getBoundingClientRect();
+  const els = [$('toolbar'), ...document.querySelectorAll('.left .panel'), $('phonebox'), document.querySelector('.transport'), document.querySelector('.timeline'), ...document.querySelectorAll('.right .panel')].filter(el => el && el.offsetParent);
+  ex.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, delay: 120, fill: 'forwards' }).finished.then(() => ex.remove());
+  vw.animate([
+    { transform: `translate(${slotRect.left - vr.left}px,${slotRect.top - vr.top}px) scale(${slotRect.width / vr.width},${slotRect.height / vr.height})`, transformOrigin: '0 0', borderRadius: '40px', opacity: .6 },
+    { transform: 'none', transformOrigin: '0 0', borderRadius: '18px', opacity: 1 }
+  ], { duration: 620, easing: 'cubic-bezier(.3,.9,.25,1)' });
+  els.forEach((el, k) => el.animate([
+    { opacity: 0, transform: `translateY(${18 + (k % 3) * 6}px) scale(.94)` }, { opacity: 1, transform: 'none' }
+  ], { duration: 520, delay: 90 + k * 55, easing: ease, fill: 'backwards' }));
+  await sleep(380);
+  work.classList.add('show-content');
+  await sleep(600 + els.length * 55);
+  work.classList.remove('intro-content', 'show-content');
+  INTRO.running = false;
+}
+function showEditor() {
+  pick.hidden = true; pick.classList.remove('overlay');
+  $('work').hidden = false; $('toolbar').hidden = false; $('tabbar').hidden = false;
+  layoutStage(); drawLanes(); redraw();
+}
+
+async function openFile(blobOrUrl, name, size, opts = {}) {
+  if (S.analyzing || S.exporting) return false;
   if (S.url && S.url.startsWith('blob:')) URL.revokeObjectURL(S.url);
   const url = typeof blobOrUrl === 'string' ? blobOrUrl : URL.createObjectURL(blobOrUrl);
   Object.assign(S, { url, key: name + '|' + size, dets: [], analyzed: 0, anchors: [], track: [], tsrc: new Uint8Array(0), path: null, W: 0 });
@@ -1192,11 +1341,11 @@ async function openFile(blobOrUrl, name, size) {
   vid.src = url;
   try {
     await new Promise((res, rej) => { vid.onloadedmetadata = res; vid.onerror = () => rej(new Error('เบราว์เซอร์เปิดวิดีโอนี้ไม่ได้')); });
-  } catch (e) { toast(e.message, 5000); return; }
+  } catch (e) { toast(e.message, 5000); return false; }
   S.W = vid.videoWidth; S.H = vid.videoHeight; S.dur = vid.duration; S.N = Math.floor(S.dur * SFPS) + 1;
   S.tsrc = new Uint8Array(S.N); S.track = new Array(S.N).fill(null);
   $('vwrap').style.aspectRatio = S.W + ' / ' + S.H;
-  $('pick').hidden = true; $('work').hidden = false; $('toolbar').hidden = false; $('tabbar').hidden = false;
+  if (!opts.quiet) showEditor();
   $('result').hidden = true; $('expBar').style.width = '0'; $('expStatus').textContent = '';
   $('anaBar').style.width = '0';
   $('fileName').textContent = name.split('/').pop();
@@ -1213,6 +1362,7 @@ async function openFile(blobOrUrl, name, size) {
   if (anc && anc.length) { S.anchors = anc.filter(a => a.idx < S.N); toast('โหลดจุดยึดเดิม ' + S.anchors.length + ' จุด'); }
   requestAnimationFrame(() => { layoutStage(); recompute(); drawLanes(); updateButtons(); redraw(); });
   makeThumbs(); makeWave();
+  return true;
 }
 
 /* ---------------- Export ---------------- */
