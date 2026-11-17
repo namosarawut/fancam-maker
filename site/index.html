@@ -189,6 +189,19 @@ button{font:inherit;color:inherit}
 #laneTrack{height:46px;border-bottom:1px solid var(--line)}
 #laneThumbs{height:64px;border-bottom:1px solid var(--line)}
 #laneWave{height:56px}
+.trimbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.trimbar .btn{min-height:36px;padding:0 12px;font-size:13px;background:var(--surface);box-shadow:var(--shadow)}
+.trimbar .btn .i{width:16px;height:16px}
+.trimbar .btn.primary{background:var(--accent);color:#fff}
+.trim-info{font-size:13px;color:var(--mute2);font-variant-numeric:tabular-nums;margin-left:4px}
+.trim-info b{color:var(--text);font-weight:600}
+.trim-shade{position:absolute;top:0;bottom:0;background:rgba(18,14,40,.5);pointer-events:none;z-index:2}
+.seg-drop{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,rgba(18,14,40,.6) 0 7px,rgba(18,14,40,.38) 7px 14px);pointer-events:none;z-index:2}
+.cut-line{position:absolute;top:0;bottom:0;margin-left:-1px;border-left:2px dashed #fff;pointer-events:none;z-index:3;filter:drop-shadow(0 0 1px rgba(0,0,0,.6))}
+#segLayer{position:absolute;inset:0;pointer-events:none}
+.trim-h{position:absolute;top:0;bottom:0;width:26px;margin-left:-13px;cursor:ew-resize;touch-action:none;z-index:4}
+.trim-h::before{content:"";position:absolute;top:2px;bottom:2px;left:9px;width:8px;border-radius:4px;background:var(--warn);box-shadow:0 0 0 2px rgba(255,255,255,.7)}
+.trim-h::after{content:"";position:absolute;top:50%;left:12px;width:2px;height:16px;margin-top:-8px;border-radius:1px;background:rgba(0,0,0,.45)}
 #playhead{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--accent);pointer-events:none;left:0}
 #playhead::before{content:"";position:absolute;top:0;left:50%;width:12px;height:12px;transform:translate(-50%,0) rotate(45deg);margin-top:-6px;background:var(--accent);border-radius:2px}
 
@@ -390,6 +403,14 @@ kbd{background:var(--surface2);border-radius:5px;padding:0 5px;font-size:11px;fo
 
     <!-- bottom: multi-track timeline -->
     <div class="tlwrap">
+      <div class="trimbar">
+        <button class="btn" id="btnTrimIn" title="ตั้งจุดเริ่มที่ตำแหน่งนี้ (I)"><i data-i="trimin"></i>ตั้งจุดเริ่ม</button>
+        <button class="btn" id="btnTrimOut" title="ตั้งจุดจบที่ตำแหน่งนี้ (O)"><i data-i="trimout"></i>ตั้งจุดจบ</button>
+        <button class="btn" id="btnSplit" title="แยกคลิปตรงตำแหน่งนี้ (S)"><i data-i="scissors"></i>แยกคลิป</button>
+        <button class="btn" id="btnSegToggle" title="ลบหรือเอาช่วงที่เล่นอยู่กลับมา (D)" hidden><i data-i="trash"></i><span>ลบช่วงนี้</span></button>
+        <button class="btn" id="btnTrimReset" hidden><i data-i="x"></i>ใช้ทั้งคลิป</button>
+        <span class="trim-info" id="trimInfo"></span>
+      </div>
       <div class="timeline">
         <div class="tl-heads">
           <div class="tl-corner" id="tlCorner">0:00</div>
@@ -402,6 +423,11 @@ kbd{background:var(--surface2);border-radius:5px;padding:0 5px;font-size:11px;fo
           <canvas id="laneTrack"></canvas>
           <canvas id="laneThumbs"></canvas>
           <canvas id="laneWave"></canvas>
+          <div id="segLayer"></div>
+          <div class="trim-shade" id="trimShadeA"></div>
+          <div class="trim-shade" id="trimShadeB"></div>
+          <div class="trim-h" id="trimHA" title="ลากเพื่อเลือกจุดเริ่ม"></div>
+          <div class="trim-h" id="trimHB" title="ลากเพื่อเลือกจุดจบ"></div>
           <div id="playhead"></div>
         </div>
       </div>
@@ -602,13 +628,91 @@ function seekTo(v, t) {
 }
 function sampleTime(i) { return Math.min(i / SFPS, Math.max(0, S.dur - 0.04)); }
 
+/* ---------------- Edit: trim range + split points + dropped segments ----------------
+   S.trim  outer range that is used (set with the handles / start-end buttons)
+   S.cuts  split points; together with 0 and the clip end they make segments
+   S.drop  start times of segments the user removed
+   The kept parts are the segments not dropped, clipped to the trim range. */
+const TA = () => S.trim ? S.trim.a : 0;
+const TB = () => S.trim ? S.trim.b : S.dur;
+const r3 = x => Math.round(x * 1000) / 1000;
+const segBounds = () => [0, ...(S.cuts || []), S.dur];
+function segStartAt(t) { let st = 0; for (const x of segBounds()) if (x <= t + 1e-6 && x < S.dur) st = x; return r3(st); }
+function keptRanges() {
+  const b = segBounds(), out = [];
+  for (let k = 0; k + 1 < b.length; k++) {
+    if ((S.drop || []).includes(r3(b[k]))) continue;
+    const x = Math.max(b[k], TA()), y = Math.min(b[k + 1], TB());
+    if (y - x < 0.05) continue;
+    if (out.length && Math.abs(out[out.length - 1][1] - x) < 1e-6) out[out.length - 1][1] = y; else out.push([x, y]);
+  }
+  return out;
+}
+const keptLen = () => keptRanges().reduce((n, [a, b]) => n + b - a, 0);
+const rangeAt = t => keptRanges().find(([a, b]) => t >= a - 0.02 && t < b - 0.02) || null;
+function nextRangeStart(t) { const n = keptRanges().find(([a]) => a >= t - 0.02); return n ? n[0] : null; }
+const isTrimmed = () => S.dur > 0 && (TA() > 0.05 || TB() < S.dur - 0.05 || (S.cuts || []).length > 0);
+function scanIdx() { const out = []; for (const [a, b] of keptRanges()) for (let i = clamp(Math.floor(a * SFPS), 0, S.N - 1); i <= clamp(Math.ceil(b * SFPS), 0, S.N - 1); i++) if (out[out.length - 1] !== i) out.push(i); return out; }
+function scanStats() { const idx = scanIdx(); let n = 0; for (const i of idx) if (S.dets[i]) n++; return { done: n, total: Math.max(1, idx.length) }; }
+const MIN_TRIM = 1;
+function saveEdit() { idbPut('trim:' + S.key, { a: TA(), b: TB(), cuts: S.cuts || [], drop: S.drop || [] }); drawTrim(); updateButtons(); }
+function setTrim(a, b, quiet) {
+  a = clamp(a, 0, S.dur); b = clamp(b, 0, S.dur);
+  if (b - a < MIN_TRIM) { if (quiet === 'a') a = Math.max(0, b - MIN_TRIM); else b = Math.min(S.dur, a + MIN_TRIM); }
+  S.trim = { a, b };
+  if (!keptRanges().length) S.drop = [];            // never leave nothing to play
+  saveEdit();
+}
+function splitHere() {
+  if (!S.dur || S.exporting || S.analyzing) return;
+  const t = r3(shownTime());
+  if (t < 0.3 || t > S.dur - 0.3) return toast('เลื่อนไปจุดที่อยากแยกก่อน');
+  if ((S.cuts || []).some(c => Math.abs(c - t) < 0.3)) return toast('ตรงนี้แยกไว้แล้ว');
+  const wasDropped = (S.drop || []).includes(segStartAt(t));
+  S.cuts = [...(S.cuts || []), t].sort((x, y) => x - y);
+  if (wasDropped) S.drop = [...S.drop, t];            // both halves keep the removed state
+  saveEdit(); toast('แยกคลิปที่ ' + fmt(t) + ' แล้ว');
+}
+function toggleSegHere() {
+  if (!S.dur || S.exporting || S.analyzing) return;
+  if (!(S.cuts || []).length) return toast('กดแยกคลิปก่อน แล้วค่อยเลือกช่วงที่จะลบ');
+  const st = segStartAt(shownTime()), drop = S.drop || [];
+  if (drop.includes(st)) { S.drop = drop.filter(x => x !== st); saveEdit(); return toast('เอาช่วงนี้กลับมาแล้ว'); }
+  S.drop = [...drop, st];
+  if (!keptRanges().length) { S.drop = drop; return toast('ต้องเหลืออย่างน้อยหนึ่งช่วง'); }
+  saveEdit(); toast('ลบช่วงนี้แล้ว จะไม่อยู่ในคลิปที่ส่งออก');
+}
+function drawTrim() {
+  if (!S.dur) return;
+  const pa = TA() / S.dur * 100, pb = TB() / S.dur * 100;
+  $('trimShadeA').style.cssText = `left:0;width:${pa}%`;
+  $('trimShadeB').style.cssText = `left:${pb}%;width:${100 - pb}%`;
+  $('trimHA').style.left = pa + '%'; $('trimHB').style.left = pb + '%';
+  const b = segBounds(); let html = '';
+  for (let k = 0; k + 1 < b.length; k++) if ((S.drop || []).includes(r3(b[k]))) html += `<div class="seg-drop" style="left:${b[k] / S.dur * 100}%;width:${(b[k + 1] - b[k]) / S.dur * 100}%"></div>`;
+  for (const c of S.cuts || []) html += `<div class="cut-line" style="left:${c / S.dur * 100}%"></div>`;
+  $('segLayer').innerHTML = html;
+  $('btnTrimReset').hidden = !isTrimmed();
+  $('btnSegToggle').hidden = !(S.cuts || []).length;
+  const rs = keptRanges();
+  $('trimInfo').innerHTML = !isTrimmed() ? `ใช้ทั้งคลิป <b>${fmt(S.dur)}</b>`
+    : rs.length === 1 ? `ใช้ช่วง <b>${fmt(rs[0][0])} – ${fmt(rs[0][1])}</b> ยาว ${fmt(keptLen())}`
+    : `ใช้ <b>${rs.length} ช่วง</b> รวม ${fmt(keptLen())}`;
+  syncSegButton();
+}
+function syncSegButton() {
+  const btn = $('btnSegToggle'); if (btn.hidden) return;
+  const dropped = (S.drop || []).includes(segStartAt(shownTime()));
+  btn.querySelector('span').textContent = dropped ? 'เอาช่วงนี้กลับมา' : 'ลบช่วงนี้';
+  btn.classList.toggle('primary', dropped);
+}
 async function analyze() {
   if (S.analyzing || !S.session) return;
   S.analyzing = true; S.cancelAna = false; updateButtons();
   try {
     if (anaVid.src !== S.url) anaVid.src = S.url;
     await primeVideo(anaVid);
-    const todo = []; for (let i = 0; i < S.N; i++) if (!S.dets[i]) todo.push(i);
+    const todo = scanIdx().filter(i => !S.dets[i]);
     const t0 = performance.now(); let done = 0;
     if (todo.length) await seekTo(anaVid, sampleTime(todo[0]));
     for (let q = 0; q < todo.length; q++) {
@@ -626,20 +730,22 @@ async function analyze() {
       if (nextSeek) await nextSeek;
       if (done % 5 === 0 || q === todo.length - 1) {
         const el = (performance.now() - t0) / 1000, eta = el / done * (todo.length - done);
-        $('anaBar').style.width = (S.analyzed / S.N * 100).toFixed(1) + '%';
-        $('anaPct').textContent = Math.round(S.analyzed / S.N * 100) + '%';
+        const st = scanStats();
+        $('anaBar').style.width = (st.done / st.total * 100).toFixed(1) + '%';
+        $('anaPct').textContent = Math.round(st.done / st.total * 100) + '%';
         if (vid.paused) drawOverlay();   // show boxes as soon as the current spot is scanned
-        $('anaStatus').textContent = `สแกนไปแล้ว ${S.analyzed} จาก ${S.N} เฟรม เหลืออีกราว ${fmtEta(eta)}`;
+        $('anaStatus').textContent = `สแกนไปแล้ว ${st.done} จาก ${st.total} เฟรม เหลืออีกราว ${fmtEta(eta)}`;
         drawTimeline();
       }
       if (done % 60 === 0 && S.anchors.length) recompute();
     }
-    if (S.analyzed >= S.N) {
+    const fin = scanStats();
+    saveCache();
+    if (fin.done >= fin.total) {
       $('anaBar').style.width = '100%';
       $('anaStatus').textContent = `สแกนเสร็จแล้ว ใช้เวลา ${((performance.now() - t0) / 1000).toFixed(0)} วินาที` + (S.anchors.length ? '' : ' ต่อไปแตะคนที่อยากให้กล้องตามได้เลย');
-      saveCache();
       if (!S.anchors.length) toast('สแกนเสร็จแล้ว หยุดคลิปแล้วแตะคนที่อยากให้กล้องตามได้เลย', 4000);
-    } else $('anaStatus').textContent = `หยุดไว้ที่ ${S.analyzed} จาก ${S.N} เฟรม กดสแกนต่อได้`;
+    } else $('anaStatus').textContent = `หยุดไว้ที่ ${fin.done} จาก ${fin.total} เฟรม กดสแกนต่อได้`;
   } catch (e) { console.error(e); toast('สแกนไม่สำเร็จ: ' + e.message, 5000); }
   S.analyzing = false; updateButtons(); recompute(); redraw();
 }
@@ -651,7 +757,7 @@ function idb() {
 }
 async function idbGet(k) { try { const db = await idb(); return await new Promise(r => { const q = db.transaction('a').objectStore('a').get(k); q.onsuccess = () => r(q.result); q.onerror = () => r(null); }); } catch (e) { return null; } }
 async function idbPut(k, v) { try { const db = await idb(); db.transaction('a', 'readwrite').objectStore('a').put(v, k); } catch (e) {} }
-function saveCache() { if (S.analyzed >= S.N) idbPut('det2:' + S.key, { N: S.N, dets: S.dets }); }
+function saveCache() { if (S.analyzed > 0) idbPut('det2:' + S.key, { N: S.N, dets: S.dets }); }
 let anchorSaveT;
 function saveAnchors() { clearTimeout(anchorSaveT); anchorSaveT = setTimeout(() => idbPut('anc:' + S.key, S.anchors.map(a => ({ idx: a.idx, box: { x: a.box.x, y: a.box.y, w: a.box.w, h: a.box.h }, hist: a.hist, manual: a.manual }))), 300); }
 
@@ -758,7 +864,7 @@ function buildPath() {
   // short median first removes one-sample glitches (a wrong box for 0.1 s) before smoothing
   S.path = { cx: gauss(median(cx, 5), sg), cy: gauss(median(cy, 5), sg), h: gauss(median(h, 9), 2 * sg) };
 }
-function recompute() { retrack(); buildPath(); drawTimeline(); renderAnchorList(); redraw(); }
+function recompute() { retrack(); buildPath(); drawTimeline(); renderAnchorList(); redraw(); updateButtons(); }
 
 function camAt(t) {
   if (!S.path) return { cx: S.W / 2, cy: S.H / 2, h: S.H * SET.subject / 100 };
@@ -813,6 +919,9 @@ const ICONS = {
   music: '<path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
   sliders: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
   x: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+  scissors: '<circle cx="6" cy="6.5" r="2.6"/><circle cx="6" cy="17.5" r="2.6"/><path d="M8.2 8 20 18.5M8.2 16 20 5.5"/>',
+  trimin: '<path d="M9 4H5.5v16H9"/><path d="M12 12h8M16.5 8.5 20 12l-3.5 3.5"/>',
+  trimout: '<path d="M15 4h3.5v16H15"/><path d="M12 12H4M7.5 8.5 4 12l3.5 3.5"/>',
 };
 const icon = (n, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ''}</svg>`;
 function paintIcons(root = document) { root.querySelectorAll('i[data-i]').forEach(el => { el.outerHTML = icon(el.dataset.i, el.className); }); }
@@ -983,9 +1092,10 @@ function drawWaveLane() {
     c.fillText(WAVE.busy ? 'กำลังอ่านเสียง…' : 'เสียงต้นฉบับ', 14 * d, y + bh / 2);
   }
 }
-function drawLanes() { drawRuler(); drawTrackLane(); drawThumbLane(); drawWaveLane(); drawPlayhead(); }
+function drawLanes() { drawRuler(); drawTrackLane(); drawThumbLane(); drawWaveLane(); drawPlayhead(); drawTrim(); }
 function drawPlayhead() {
   if (!S.dur) return;
+  syncSegButton();
   const t = shownTime();
   $('playhead').style.left = (t / S.dur * 100) + '%';
   $('tlCorner').textContent = fmt(t);
@@ -1085,11 +1195,31 @@ function redraw() {
 const hasRVFC = 'requestVideoFrameCallback' in HTMLVideoElement.prototype;
 function frameLoop() {
   if (seekTarget != null && !vid.seeking && Math.abs(vid.currentTime - seekTarget) < .3) seekTarget = null;
+  if (!S.exporting && !vid.paused && seekTarget == null && !rangeAt(vid.currentTime)) trimEndCheck();
   if (!S.exporting) redraw();
   if (!vid.paused && !vid.ended) hasRVFC ? vid.requestVideoFrameCallback(frameLoop) : requestAnimationFrame(frameLoop);
 }
 vid.addEventListener('play', () => { $('btnPlay').innerHTML = icon('pause'); hasRVFC ? vid.requestVideoFrameCallback(frameLoop) : requestAnimationFrame(frameLoop); });
 vid.addEventListener('pause', () => { $('btnPlay').innerHTML = icon('play'); redraw(); });
+// stop at the end of the chosen part: a timer aimed at the end point, plus timeupdate as a backstop
+// (frame callbacks can stall when the page is hidden or not painting)
+let trimEndT = 0;
+function trimEndCheck() {
+  if (S.exporting || vid.paused || seekTarget != null) return;
+  const t = vid.currentTime, r = rangeAt(t);
+  clearTimeout(trimEndT);
+  if (!r) {                                   // in a removed part or past the end: jump on, or stop at the end
+    const n = nextRangeStart(t);
+    if (n != null) seekVideo(n);
+    else { const rs = keptRanges(); vid.pause(); seekVideo(rs.length ? rs[rs.length - 1][1] : TB()); }
+    return;
+  }
+  trimEndT = setTimeout(trimEndCheck, Math.max(15, (r[1] - t) * 1000 / (vid.playbackRate || 1)));
+}
+vid.addEventListener('playing', trimEndCheck);
+vid.addEventListener('seeked', () => { if (!vid.paused) trimEndCheck(); });
+vid.addEventListener('timeupdate', trimEndCheck);
+vid.addEventListener('pause', () => clearTimeout(trimEndT));
 vid.addEventListener('seeked', redraw);
 vid.addEventListener('loadeddata', () => { layoutStage(); redraw(); });
 let resizeT;
@@ -1130,7 +1260,7 @@ ov.addEventListener('click', e => {
   }
   S.anchors = S.anchors.filter(a => a.idx !== i); S.anchors.push(anc);
   saveAnchors(); recompute();
-  if (!S.analyzing && S.analyzed < S.N && S.session) toast('มาร์กแล้ว กดสแกนคลิปก่อน กล้องถึงจะตามได้ทั้งคลิป', 3500);
+  if (!S.analyzing && scanStats().done < scanStats().total && S.session) toast('มาร์กแล้ว กดสแกนคลิปก่อน กล้องถึงจะตามได้ทั้งคลิป', 3500);
   else toast(best ? `มาร์กไว้ที่ ${fmt(i / SFPS)} แล้ว` : `มาร์กไว้ที่ ${fmt(i / SFPS)} แล้ว ตรงนี้ไม่เจอกรอบคน เลยใช้จุดที่แตะแทน`);
 });
 function removeAnchorNear(t) {
@@ -1170,7 +1300,9 @@ function nextLost() {
 function togglePlay() {
   if (S.exporting) return; ensureAudio();
   if (!vid.paused) { vid.pause(); return; }
-  const tgt = seekTarget;
+  let tgt = seekTarget;
+  const at = shownTime();
+  if (!rangeAt(at)) { const n = nextRangeStart(at), rs = keptRanges(); tgt = n != null ? n : (rs.length ? rs[0][0] : 0); seekTarget = tgt; }   // start inside a kept part
   const p = vid.play();             // called right away so the tap still counts as a user gesture
   if (tgt != null && Math.abs(vid.currentTime - tgt) > 0.05) vid.currentTime = tgt;
   if (p && p.catch) p.catch(() => {});
@@ -1187,6 +1319,30 @@ $('btnAnaCancel').onclick = () => { S.cancelAna = true; };
 $('btnExport').onclick = exportVideo;
 $('btnExpCancel').onclick = () => { expCancel = true; vid.pause(); };
 $('btnNewFile').onclick = () => { if (!busy()) $('file').click(); };
+function trimHere(which) {
+  if (!S.dur || S.exporting || S.analyzing) return;
+  const t = shownTime();
+  if (which === 'a') { if (t > TB() - MIN_TRIM) return toast('จุดเริ่มต้องอยู่ก่อนจุดจบอย่างน้อย 1 วินาที'); setTrim(t, TB(), 'a'); toast('เริ่มที่ ' + fmt(TA())); }
+  else { if (t < TA() + MIN_TRIM) return toast('จุดจบต้องอยู่หลังจุดเริ่มอย่างน้อย 1 วินาที'); setTrim(TA(), t, 'b'); toast('จบที่ ' + fmt(TB())); }
+}
+$('btnTrimIn').onclick = () => trimHere('a');
+$('btnTrimOut').onclick = () => trimHere('b');
+$('btnTrimReset').onclick = () => { S.cuts = []; S.drop = []; setTrim(0, S.dur); toast('ใช้ทั้งคลิปแล้ว'); };
+$('btnSplit').onclick = splitHere;
+$('btnSegToggle').onclick = toggleSegHere;
+// drag handles on the timeline
+for (const [id, which] of [['trimHA', 'a'], ['trimHB', 'b']]) {
+  const h = $(id); let drag = false;
+  const move = e => {
+    const r = lanes.getBoundingClientRect(), t = clamp((e.clientX - r.left) / r.width, 0, 1) * S.dur;
+    if (which === 'a') setTrim(Math.min(t, TB() - MIN_TRIM), TB(), 'a'); else setTrim(TA(), Math.max(t, TA() + MIN_TRIM), 'b');
+    seekVideo(which === 'a' ? TA() : TB());
+  };
+  h.addEventListener('pointerdown', e => { if (S.exporting || S.analyzing || !S.dur) return; e.stopPropagation(); e.preventDefault(); drag = true; vid.pause(); try { h.setPointerCapture(e.pointerId); } catch (_) {} move(e); });
+  h.addEventListener('pointermove', e => { if (drag) { e.stopPropagation(); move(e); } });
+  const end = e => { if (!drag) return; drag = false; e.stopPropagation(); redraw(); };
+  h.addEventListener('pointerup', end); h.addEventListener('pointercancel', end); h.addEventListener('lostpointercapture', end);
+}
 function toggleSet(key) { SET[key] = SET[key] === false; saveSet(); syncToggles(); redraw(); }
 function syncToggles() {
   for (const [k, ids] of [['boxes', ['btnBoxes', 'btnBoxes2']], ['crop', ['btnCrop', 'btnCrop2']]]) ids.forEach(id => $(id).classList.toggle('on', SET[k] !== false));
@@ -1213,19 +1369,26 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'ArrowLeft' && e.target.type !== 'range') { e.preventDefault(); step(-1 / SFPS); }
   else if (e.key === 'ArrowRight' && e.target.type !== 'range') { e.preventDefault(); step(1 / SFPS); }
   else if (e.key === 'n' || e.key === 'N') nextLost();
+  else if (e.key === 'i' || e.key === 'I') trimHere('a');
+  else if (e.key === 'o' || e.key === 'O') trimHere('b');
+  else if (e.key === 's' || e.key === 'S') splitHere();
+  else if (e.key === 'd' || e.key === 'D') toggleSegHere();
   else if (e.key === 'Delete' || e.key === 'Backspace') removeAnchorNear(vid.currentTime);
 });
 function updateButtons() {
   const ana = S.analyzing, exp = S.exporting;
-  $('btnAna').disabled = ana || exp || !S.session || !S.W || S.analyzed >= S.N;
-  $('btnAna').querySelector('span').textContent = !S.session ? 'รอสักครู่…' : ana ? 'กำลังสแกน…' : S.analyzed >= S.N && S.N ? 'สแกนเสร็จแล้ว' : S.analyzed ? 'สแกนต่อ' : 'สแกนคลิป';
+  const st = S.N ? scanStats() : { done: 0, total: 1 }, scanned = S.N && st.done >= st.total;
+  $('btnAna').disabled = ana || exp || !S.session || !S.W || scanned;
+  $('btnAna').querySelector('span').textContent = !S.session ? 'รอสักครู่…' : ana ? 'กำลังสแกน…' : scanned ? 'สแกนเสร็จแล้ว' : st.done ? 'สแกนต่อ' : 'สแกนคลิป';
   $('btnAnaCancel').hidden = !ana;
-  $('anaPct').textContent = S.N ? Math.round(S.analyzed / S.N * 100) + '%' : '';
+  $('anaPct').textContent = S.N ? Math.round(st.done / st.total * 100) + '%' : '';
+  if (S.N && !ana) $('anaBar').style.width = (st.done / st.total * 100).toFixed(1) + '%';
+  ['btnTrimIn', 'btnTrimOut', 'btnTrimReset', 'btnSplit', 'btnSegToggle'].forEach(id => $(id).disabled = ana || exp);
   $('btnExport').disabled = ana || exp || !S.path;
   $('btnExpCancel').hidden = !exp;
   $('btnNewFile').disabled = ana || exp;
   const [ow, oh] = outSize();
-  $('expInfo').textContent = `${ow}×${oh} ยาว ${fmt(S.dur)} มีเสียงต้นฉบับ ใช้เวลาส่งออกพอๆ กับความยาวคลิป`;
+  $('expInfo').textContent = `${ow}×${oh} ยาว ${fmt(keptLen())} มีเสียงต้นฉบับ ใช้เวลาส่งออกพอๆ กับความยาวคลิป`;
 }
 
 /* ---------------- Settings ---------------- */
@@ -1400,7 +1563,7 @@ async function openFile(blobOrUrl, name, size, opts = {}) {
     await new Promise((res, rej) => { vid.onloadedmetadata = res; vid.onerror = () => rej(new Error('เปิดคลิปนี้ไม่ได้ ลองแปลงเป็น MP4 ก่อน')); });
   } catch (e) { toast(e.message, 5000); return false; }
   S.W = vid.videoWidth; S.H = vid.videoHeight; S.dur = vid.duration; S.N = Math.floor(S.dur * SFPS) + 1;
-  S.tsrc = new Uint8Array(S.N); S.track = new Array(S.N).fill(null);
+  S.tsrc = new Uint8Array(S.N); S.track = new Array(S.N).fill(null); S.trim = { a: 0, b: S.dur }; S.cuts = []; S.drop = [];
   primeVideo(vid, false).then(() => redraw(), () => {});
   $('vwrap').style.aspectRatio = S.W + ' / ' + S.H;
   if (!opts.quiet) showEditor();
@@ -1408,17 +1571,24 @@ async function openFile(blobOrUrl, name, size, opts = {}) {
   $('anaBar').style.width = '0';
   $('fileName').textContent = name.split('/').pop();
   $('fileMeta').textContent = `${S.W}×${S.H} · ${fmt(S.dur)}` + (typeof size === 'number' ? ` · ${(size / 1048576).toFixed(1)} MB` : '');
-  $('anaStatus').textContent = `จะสแกนหาคนทุก 0.1 วินาที รวม ${S.N} เฟรม`;
+  $('anaStatus').textContent = 'จะสแกนหาคนทุก 0.1 วินาที เฉพาะช่วงที่เลือกใช้';
   if (S.H > S.W) toast('คลิปนี้เป็นแนวตั้งอยู่แล้ว ใช้ได้นะ แต่กับคลิปแนวนอนจะเห็นผลชัดกว่า', 4000);
   const cached = await idbGet('det2:' + S.key);
+  const tr = await idbGet('trim:' + S.key);
+  if (tr && tr.b > tr.a && tr.b <= S.dur + .01) {
+    S.trim = { a: tr.a, b: Math.min(tr.b, S.dur) };
+    S.cuts = (tr.cuts || []).filter(c => c > 0 && c < S.dur); S.drop = (tr.drop || []).filter(d => d === 0 || S.cuts.includes(d));
+    if (!keptRanges().length) S.drop = [];
+  }
   if (cached && cached.N === S.N) {
-    S.dets = cached.dets; S.analyzed = S.N; $('anaBar').style.width = '100%';
-    $('anaStatus').textContent = 'เคยสแกนคลิปนี้ไว้แล้ว ไม่ต้องสแกนใหม่';
+    S.dets = cached.dets; S.analyzed = S.dets.filter(Boolean).length;
+    const st = scanStats();
+    $('anaStatus').textContent = st.done >= st.total ? 'เคยสแกนคลิปนี้ไว้แล้ว ไม่ต้องสแกนใหม่' : `เคยสแกนไว้บางส่วน เหลืออีก ${st.total - st.done} เฟรม`;
     if (mobile()) { document.body.dataset.tab = 'anc'; $('tabbar').querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.tab === 'anc')); }
   }
   const anc = await idbGet('anc:' + S.key);
   if (anc && anc.length) { S.anchors = anc.filter(a => a.idx < S.N); toast('ดึงมาร์กเดิมกลับมา ' + S.anchors.length + ' จุด'); }
-  requestAnimationFrame(() => { layoutStage(); recompute(); drawLanes(); updateButtons(); redraw(); });
+  setTimeout(() => { layoutStage(); recompute(); drawLanes(); updateButtons(); redraw(); }, 0);   // not rAF: it stalls in background tabs
   makeThumbs(); makeWave();
   return true;
 }
@@ -1432,7 +1602,7 @@ function pickMime() {
 async function exportVideo() {
   if (S.exporting || !S.path) return;
   if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) return ask('เบราว์เซอร์นี้ส่งออกคลิปไม่ได้ ลองเปิดใน Chrome, Edge หรือ Safari เวอร์ชันใหม่', 'ตกลง', false);
-  if (S.analyzed < S.N && !(await ask('ยังสแกนไม่ครบทั้งคลิป ช่วงที่ยังไม่ได้สแกน กล้องจะค้างอยู่กับที่\nจะส่งออกเลยไหม', 'ส่งออกเลย'))) return;
+  { const st = scanStats(); if (st.done < st.total && !(await ask('ยังสแกนช่วงนี้ไม่ครบ ช่วงที่ยังไม่ได้สแกน กล้องจะค้างอยู่กับที่\nจะส่งออกเลยไหม', 'ส่งออกเลย'))) return; }
   ensureAudio();
   const [ow, oh] = outSize(), mime = pickMime();
   const can = document.createElement('canvas'); can.width = ow; can.height = oh;
@@ -1447,8 +1617,10 @@ async function exportVideo() {
   const chunks = []; rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
   const stopped = new Promise(r => rec.onstop = r);
   vid.pause(); vid.loop = false; vid.playbackRate = 1;
-  await seekTo(vid, 0);
-  drawCam(ctx, ow, oh, 0, vid);
+  const ranges = keptRanges(), elen = Math.max(.1, keptLen());
+  let ri = 0, doneLen = 0, curA = ranges[0][0], curB = ranges[0][1], cancelled = false;
+  seekTarget = null; await seekTo(vid, curA);
+  drawCam(ctx, ow, oh, curA, vid);
   if (aGain) aGain.gain.value = 0;     // keep speakers quiet; audio still goes to the recorder
   const t0 = performance.now();
   rec.start(1000);
@@ -1458,22 +1630,35 @@ async function exportVideo() {
   const drawFrame = () => {
     lastDraw = performance.now();
     drawCam(ctx, ow, oh, vid.currentTime, vid);
+    if (vid.currentTime >= curB && !vid.paused) vid.pause();      // end of this kept part
     if (lastDraw - lastUi > 100) {          // UI at ~10 fps is enough and keeps the encoder fed
       lastUi = lastDraw;
       if (document.visibilityState === 'visible') { drawPreview(); drawOverlay(); drawTimeline(); }
-      const p = vid.currentTime / S.dur;
+      const at = doneLen + clamp(vid.currentTime - curA, 0, curB - curA), p = clamp(at / elen, 0, 1);
       $('expBar').style.width = (p * 100).toFixed(1) + '%';
-      $('expStatus').textContent = `กำลังส่งออก ${Math.round(p * 100)}% (${fmt(vid.currentTime)} จาก ${fmt(S.dur)})`;
+      $('expStatus').textContent = `กำลังส่งออก ${Math.round(p * 100)}% (${fmt(at)} จาก ${fmt(elen)})` + (ranges.length > 1 ? ` · ช่วงที่ ${ri + 1}/${ranges.length}` : '');
       $('timeLbl').innerHTML = fmt(vid.currentTime) + ' <span>/ ' + fmt(S.dur) + '</span>';
     }
   };
   const loop = () => { drawFrame(); if (!vid.paused && !vid.ended) hasRVFC ? vid.requestVideoFrameCallback(loop) : requestAnimationFrame(loop); };
   // rVFC / rAF stop when the page is hidden; a timer keeps drawing (pages playing audio are not throttled hard)
   const watchdog = setInterval(() => { if (!vid.paused && performance.now() - lastDraw > 45) drawFrame(); }, 15);
-  const ended = new Promise(r => { const f = () => { vid.removeEventListener('ended', f); vid.removeEventListener('pause', f); r(); }; vid.addEventListener('ended', f); vid.addEventListener('pause', f); });
-  try { await vid.play(); } catch (e) { console.error(e); expCancel = true; }
-  hasRVFC ? vid.requestVideoFrameCallback(loop) : requestAnimationFrame(loop);
-  await ended;
+  const canPause = typeof rec.pause === 'function' && typeof rec.resume === 'function';
+  for (ri = 0; ri < ranges.length; ri++) {
+    [curA, curB] = ranges[ri];
+    if (ri > 0) {
+      // jump to the next kept part with the recorder paused, so the gap does not end up in the file
+      if (canPause && rec.state === 'recording') rec.pause();
+      await seekTo(vid, curA); drawCam(ctx, ow, oh, curA, vid);
+      if (canPause && rec.state === 'paused') rec.resume();
+    }
+    const ended = new Promise(r => { const f = () => { vid.removeEventListener('ended', f); vid.removeEventListener('pause', f); r(); }; vid.addEventListener('ended', f); vid.addEventListener('pause', f); });
+    try { await vid.play(); } catch (e) { console.error(e); expCancel = true; }
+    hasRVFC ? vid.requestVideoFrameCallback(loop) : requestAnimationFrame(loop);
+    await ended;
+    if (expCancel || vid.currentTime < curB - 0.5) { cancelled = true; break; }
+    doneLen += curB - curA;
+  }
   clearInterval(watchdog); document.removeEventListener('visibilitychange', onVis);
   drawCam(ctx, ow, oh, vid.currentTime, vid);
   await new Promise(r => setTimeout(r, 250));
@@ -1482,7 +1667,7 @@ async function exportVideo() {
   applyMute();
   S.exporting = false; $('expWarn').hidden = true; updateButtons();
   const realDur = (performance.now() - t0) / 1000;
-  if (expCancel || vid.currentTime < S.dur - 0.5) { $('expStatus').textContent = 'ยกเลิกแล้ว'; $('expBar').style.width = '0'; return; }
+  if (cancelled) { $('expStatus').textContent = 'ยกเลิกแล้ว'; $('expBar').style.width = '0'; return; }
   const type = (rec.mimeType || mime || 'video/webm').split(';')[0], ext = type.includes('mp4') ? 'mp4' : 'webm';
   const blob = new Blob(chunks, { type });
   showResult(blob, ext, realDur);
